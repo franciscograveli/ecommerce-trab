@@ -1,0 +1,13 @@
+{
+    "name": "ifsudestemg/ecommerce-b2b",
+    "require": {
+        "php": "^8.1",
+        "illuminate/database": "^10.0",
+        "vlucas/phpdotenv": "^5.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}
