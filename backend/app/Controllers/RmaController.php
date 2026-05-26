@@ -4,13 +4,13 @@ namespace App\Controllers;
 
 use App\Models\RmaSolicitacao;
 use App\Models\Pedido;
+use App\Models\Estoque;
 use App\Middleware\Auth;
 
 class RmaController
 {
     public function index(array $params): void
     {
-        Auth::handle();
         $query = RmaSolicitacao::with(['pedido.cliente', 'comprador.usuario']);
 
         if (!empty($_GET['status']))       $query->where('status', $_GET['status']);
@@ -21,7 +21,6 @@ class RmaController
 
     public function show(array $params): void
     {
-        Auth::handle();
         $rma = RmaSolicitacao::with(['pedido.cliente', 'pedido.itens.grade', 'comprador.usuario'])->find($params['id']);
         if (!$rma) json(['erro' => 'Solicitação RMA não encontrada'], 404);
         json($rma->toArray());
@@ -29,7 +28,6 @@ class RmaController
 
     public function store(array $params): void
     {
-        Auth::handle();
         $body = bodyParams();
 
         foreach (['pedido_id', 'comprador_id', 'tipo', 'motivo'] as $campo) {
@@ -60,7 +58,6 @@ class RmaController
 
     public function update(array $params): void
     {
-        Auth::handle();
         $rma = RmaSolicitacao::find($params['id']);
         if (!$rma) json(['erro' => 'Solicitação RMA não encontrada'], 404);
 
@@ -71,9 +68,29 @@ class RmaController
             json(['erro' => 'Status inválido'], 422);
         }
 
+        $statusAnterior = $rma->status;
+
         if (!empty($body['status'])) $rma->status = $body['status'];
         $rma->save();
 
+        // Devolução concluída: devolve itens ao estoque
+        if ($body['status'] === 'concluido' && $statusAnterior !== 'concluido' && $rma->tipo === 'devolucao') {
+            $this->incrementarEstoque($rma);
+        }
+
         json($rma->toArray());
+    }
+
+    private function incrementarEstoque(RmaSolicitacao $rma): void
+    {
+        $itens = $rma->pedido()->with('itens')->first()?->itens ?? [];
+
+        foreach ($itens as $item) {
+            $estoque = Estoque::where('grade_id', $item->grade_id)->first();
+
+            if ($estoque) {
+                $estoque->increment('quantidade', $item->quantidade);
+            }
+        }
     }
 }

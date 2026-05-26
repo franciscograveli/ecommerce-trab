@@ -6,13 +6,13 @@ use App\Models\Pedido;
 use App\Models\PedidoItem;
 use App\Models\Grade;
 use App\Models\Cliente;
+use App\Models\Estoque;
 use App\Middleware\Auth;
 
 class PedidoController
 {
     public function index(array $params): void
     {
-        Auth::handle();
         $query = Pedido::with(['cliente', 'comprador.usuario', 'representante.usuario', 'itens.grade']);
 
         if (!empty($_GET['status']))     $query->where('status', $_GET['status']);
@@ -23,7 +23,6 @@ class PedidoController
 
     public function show(array $params): void
     {
-        Auth::handle();
         $pedido = Pedido::with([
             'cliente',
             'comprador.usuario',
@@ -39,7 +38,6 @@ class PedidoController
 
     public function store(array $params): void
     {
-        Auth::handle();
         $body = bodyParams();
 
         foreach (['cliente_id', 'comprador_id'] as $campo) {
@@ -59,7 +57,6 @@ class PedidoController
 
     public function update(array $params): void
     {
-        Auth::handle();
         $pedido = Pedido::find($params['id']);
         if (!$pedido) json(['erro' => 'Pedido não encontrado'], 404);
 
@@ -75,6 +72,9 @@ class PedidoController
             if ($cliente && $pedido->valor_total > $cliente->limite_credito) {
                 json(['erro' => 'Valor do pedido excede o limite de crédito do cliente'], 422);
             }
+
+            $this->validarEstoque($pedido);
+            $this->decrementarEstoque($pedido);
         }
 
         if (!empty($body['status'])) $pedido->status = $body['status'];
@@ -85,7 +85,6 @@ class PedidoController
 
     public function cancel(array $params): void
     {
-        Auth::handle();
         $pedido = Pedido::find($params['id']);
         if (!$pedido) json(['erro' => 'Pedido não encontrado'], 404);
 
@@ -103,7 +102,6 @@ class PedidoController
 
     public function indexItens(array $params): void
     {
-        Auth::handle();
         $pedido = Pedido::find($params['id']);
         if (!$pedido) json(['erro' => 'Pedido não encontrado'], 404);
         json($pedido->itens()->with('grade.produto')->get()->toArray());
@@ -111,7 +109,6 @@ class PedidoController
 
     public function storeItem(array $params): void
     {
-        Auth::handle();
         $pedido = Pedido::find($params['id']);
         if (!$pedido) json(['erro' => 'Pedido não encontrado'], 404);
 
@@ -140,7 +137,6 @@ class PedidoController
 
     public function destroyItem(array $params): void
     {
-        Auth::handle();
         $pedido = Pedido::find($params['id']);
         if (!$pedido) json(['erro' => 'Pedido não encontrado'], 404);
 
@@ -161,5 +157,39 @@ class PedidoController
 
         $pedido->valor_total = $total ?? 0;
         $pedido->save();
+    }
+
+    private function validarEstoque(Pedido $pedido): void
+    {
+        $itens = $pedido->itens()->get();
+
+        foreach ($itens as $item) {
+            $totalEmEstoque = Estoque::where('grade_id', $item->grade_id)
+                ->sum('quantidade');
+
+            if ($totalEmEstoque < $item->quantidade) {
+                json([
+                    'erro'    => 'Estoque insuficiente para aprovação do pedido',
+                    'grade_id'=> $item->grade_id,
+                    'disponivel' => $totalEmEstoque,
+                    'necessario' => $item->quantidade,
+                ], 422);
+            }
+        }
+    }
+
+    private function decrementarEstoque(Pedido $pedido): void
+    {
+        foreach ($pedido->itens()->get() as $item) {
+            // Decrementa do primeiro depósito com saldo suficiente
+            $estoque = Estoque::where('grade_id', $item->grade_id)
+                ->where('quantidade', '>=', $item->quantidade)
+                ->orderBy('quantidade', 'desc')
+                ->first();
+
+            if ($estoque) {
+                $estoque->decrement('quantidade', $item->quantidade);
+            }
+        }
     }
 }

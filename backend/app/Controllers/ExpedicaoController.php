@@ -11,7 +11,6 @@ class ExpedicaoController
 {
     public function index(array $params): void
     {
-        Auth::handle();
         $query = Expedicao::with(['pedido.cliente', 'pedido.itens.grade']);
 
         if (!empty($_GET['status_logistica'])) {
@@ -23,7 +22,6 @@ class ExpedicaoController
 
     public function show(array $params): void
     {
-        Auth::handle();
         $expedicao = Expedicao::with(['pedido.cliente', 'pedido.itens.grade', 'pedido.boletos'])->find($params['id']);
         if (!$expedicao) json(['erro' => 'Expedição não encontrada'], 404);
         json($expedicao->toArray());
@@ -31,19 +29,18 @@ class ExpedicaoController
 
     public function store(array $params): void
     {
-        Auth::handle();
         $body = bodyParams();
         if (empty($body['pedido_id'])) json(['erro' => "Campo 'pedido_id' é obrigatório"], 422);
 
         $pedido = Pedido::find($body['pedido_id']);
         if (!$pedido) json(['erro' => 'Pedido não encontrado'], 404);
 
-        if ($pedido->status !== 'aprovado') {
-            json(['erro' => 'Só é possível abrir expedição para pedidos aprovados'], 422);
-        }
-
         if (Expedicao::where('pedido_id', $body['pedido_id'])->exists()) {
             json(['erro' => 'Já existe uma expedição para este pedido'], 409);
+        }
+
+        if ($pedido->status !== 'aprovado') {
+            json(['erro' => 'Só é possível abrir expedição para pedidos aprovados'], 422);
         }
 
         $expedicao = Expedicao::create([
@@ -61,7 +58,6 @@ class ExpedicaoController
 
     public function update(array $params): void
     {
-        Auth::handle();
         $expedicao = Expedicao::find($params['id']);
         if (!$expedicao) json(['erro' => 'Expedição não encontrada'], 404);
 
@@ -86,7 +82,6 @@ class ExpedicaoController
 
     public function storeBoleto(array $params): void
     {
-        Auth::handle();
         $expedicao = Expedicao::find($params['id']);
         if (!$expedicao) json(['erro' => 'Expedição não encontrada'], 404);
 

@@ -17,7 +17,6 @@ class UsuarioController
 
     public function show(array $params): void
     {
-        Auth::handle();
         $usuario = Usuario::with(['perfil', 'representante', 'comprador'])->find($params['id']);
         if (!$usuario) json(['erro' => 'Usuário não encontrado'], 404);
         json($usuario->toArray());
@@ -25,7 +24,6 @@ class UsuarioController
 
     public function store(array $params): void
     {
-        Auth::handle();
         $body = bodyParams();
 
         foreach (['perfil_id', 'nome', 'email', 'senha'] as $campo) {
@@ -67,7 +65,6 @@ class UsuarioController
 
     public function update(array $params): void
     {
-        Auth::handle();
         $usuario = Usuario::find($params['id']);
         if (!$usuario) json(['erro' => 'Usuário não encontrado'], 404);
 
@@ -86,7 +83,6 @@ class UsuarioController
 
     public function destroy(array $params): void
     {
-        Auth::handle();
         $usuario = Usuario::find($params['id']);
         if (!$usuario) json(['erro' => 'Usuário não encontrado'], 404);
 
