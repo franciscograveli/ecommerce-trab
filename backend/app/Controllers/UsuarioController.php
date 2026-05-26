@@ -12,7 +12,7 @@ class UsuarioController
     public function index(array $params): void
     {
         Auth::handle();
-        json(Usuario::with('perfil')->get()->toArray());
+        json(Usuario::with(['perfil', 'representante'])->get()->toArray());
     }
 
     public function show(array $params): void
