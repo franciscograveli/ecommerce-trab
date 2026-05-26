@@ -10,7 +10,7 @@ use App\Controllers\ExpedicaoController;
 use App\Controllers\RmaController;
 
 $router->post('/auth/login',  [AuthController::class, 'login']);
-$router->post('/auth/logout', [AuthController::class, 'logout'], []);
+$router->delete('/auth/logout', [AuthController::class, 'logout'], []);
 
 $router->get('/usuarios',         [UsuarioController::class, 'index'],   ['admin']);
 $router->post('/usuarios',        [UsuarioController::class, 'store'],   ['admin']);
@@ -50,7 +50,8 @@ $router->post('/pedidos/{id}/itens',         [PedidoController::class, 'storeIte
 $router->delete('/pedidos/{id}/itens/{iid}', [PedidoController::class, 'destroyItem'], ['comprador', 'representante']);
 
 $router->get('/estoque',    [EstoqueController::class, 'index'],         ['admin', 'representante']);
-$router->post('/estoque',   [EstoqueController::class, 'store'],         ['admin']);
+$router->post('/estoque/entrada', [EstoqueController::class, 'entrada'], ['admin']);
+$router->post('/estoque/saida',   [EstoqueController::class, 'saida'],   ['admin']);
 $router->get('/depositos',  [EstoqueController::class, 'indexDepositos'],['admin', 'representante']);
 $router->post('/depositos', [EstoqueController::class, 'storeDeposito'], ['admin']);
 
@@ -63,4 +64,4 @@ $router->post('/expedicao/{id}/boleto', [ExpedicaoController::class, 'storeBolet
 $router->get('/rma',      [RmaController::class, 'index'],  ['admin', 'representante', 'comprador']);
 $router->post('/rma',     [RmaController::class, 'store'],  ['comprador']);
 $router->get('/rma/{id}', [RmaController::class, 'show'],   ['admin', 'representante', 'comprador']);
-$router->put('/rma/{id}', [RmaController::class, 'update'], ['admin', 'representante']);
+$router->put('/rma/{id}/status', [RmaController::class, 'update'], ['admin', 'representante']);
