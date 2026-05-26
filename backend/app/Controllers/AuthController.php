@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\Usuario;
+use App\Models\Token;
 use App\Middleware\Auth;
 
 class AuthController
@@ -23,12 +24,14 @@ class AuthController
             json(['erro' => 'Credenciais inválidas'], 401);
         }
 
-        $token = bin2hex(random_bytes(32));
-        $usuario->token_autenticacao = $token;
-        $usuario->save();
+        $token = Token::create([
+            'usuario_id' => $usuario->id,
+            'token'      => bin2hex(random_bytes(32)),
+            'expires_at' => date('Y-m-d H:i:s', strtotime('+8 hours')),
+        ]);
 
         json([
-            'token'   => $token,
+            'token'   => $token->token,
             'usuario' => [
                 'id'     => $usuario->id,
                 'nome'   => $usuario->nome,
@@ -40,8 +43,7 @@ class AuthController
 
     public function logout(array $params): void
     {
-        $usuario = Auth::user();
-        Usuario::where('id', $usuario['id'])->update(['token_autenticacao' => null]);
+        Token::where('token', bearerToken())->delete();
         json(['mensagem' => 'Logout realizado com sucesso']);
     }
 }

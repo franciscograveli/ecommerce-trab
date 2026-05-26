@@ -210,14 +210,15 @@ $prodId = $novoProd['body']['id'] ?? null;
 check('GET /produtos/:id → 200', 200, request('GET', "/produtos/$prodId", [], $tokenComp));
 check('PUT /produtos/:id → 200', 200, request('PUT', "/produtos/$prodId", ['nome' => 'Produto CLI v2'], $tokenAdmin));
 
+$skuUnique = 'CLI-SKU-' . time();
 $novaGrade = request('POST', "/produtos/$prodId/grades", [
-    'sku' => 'CLI-SKU-01', 'cor' => 'Verde', 'tamanho' => 'M',
+    'sku' => $skuUnique, 'cor' => 'Verde', 'tamanho' => 'M',
 ], $tokenAdmin);
 check('Criar grade → 201', 201, $novaGrade, fn($b) => isset($b['id']));
 $gradeId = $novaGrade['body']['id'] ?? null;
 
 check('SKU duplicado → 409', 409,
-    request('POST', "/produtos/$prodId/grades", ['sku' => 'CLI-SKU-01'], $tokenAdmin));
+    request('POST', "/produtos/$prodId/grades", ['sku' => $skuUnique], $tokenAdmin));
 
 check('GET /produtos/:id/grades → 200', 200,
     request('GET', "/produtos/$prodId/grades", [], $tokenComp));
@@ -252,20 +253,20 @@ $depositoId = $novoDeposito['body']['id'] ?? null;
 
 check('GET /depositos → 200', 200, request('GET', '/depositos', [], $tokenRep));
 
-check('Entrada (set 100) → 200', 200, request('POST', '/estoque', [
-    'grade_id' => $gradeId, 'deposito_id' => $depositoId, 'quantidade' => 100, 'operacao' => 'set',
+check('Entrada 100 unidades → 200', 200, request('POST', '/estoque/entrada', [
+    'grade_id' => $gradeId, 'deposito_id' => $depositoId, 'quantidade' => 100,
 ], $tokenAdmin));
 
-check('Entrada (add 20) → 200', 200, request('POST', '/estoque', [
-    'grade_id' => $gradeId, 'deposito_id' => $depositoId, 'quantidade' => 20, 'operacao' => 'add',
+check('Entrada mais 20 unidades → 200', 200, request('POST', '/estoque/entrada', [
+    'grade_id' => $gradeId, 'deposito_id' => $depositoId, 'quantidade' => 20,
 ], $tokenAdmin));
 
-check('Saída (sub 10) → 200', 200, request('POST', '/estoque', [
-    'grade_id' => $gradeId, 'deposito_id' => $depositoId, 'quantidade' => 10, 'operacao' => 'sub',
+check('Saída 10 unidades → 200', 200, request('POST', '/estoque/saida', [
+    'grade_id' => $gradeId, 'deposito_id' => $depositoId, 'quantidade' => 10,
 ], $tokenAdmin));
 
-check('Subtração maior que estoque → 422', 422, request('POST', '/estoque', [
-    'grade_id' => $gradeId, 'deposito_id' => $depositoId, 'quantidade' => 99999, 'operacao' => 'sub',
+check('Saída maior que estoque → 422', 422, request('POST', '/estoque/saida', [
+    'grade_id' => $gradeId, 'deposito_id' => $depositoId, 'quantidade' => 99999,
 ], $tokenAdmin));
 
 check('GET /estoque → 200', 200, request('GET', '/estoque', [], $tokenRep));
@@ -329,7 +330,12 @@ check('Status inválido → 422', 422,
 check('Comprador → PUT /pedidos (403)', 403,
     request('PUT', "/pedidos/$pedidoId", ['status' => 'aprovado'], $tokenComp));
 
-check('Aprovar pedido → 200', 200,
+// Garante estoque suficiente para aprovação (110 - 10 = 110 disponível, pedido precisa de 5)
+request('POST', '/estoque/entrada', [
+    'grade_id' => $gradeId, 'deposito_id' => $depositoId, 'quantidade' => 50,
+], $tokenAdmin);
+
+check('Aprovar pedido (decrementa estoque) → 200', 200,
     request('PUT', "/pedidos/$pedidoId", ['status' => 'aprovado'], $tokenAdmin));
 
 // -------------------------------------------------------
@@ -386,10 +392,10 @@ check('Tipo inválido → 422', 422, request('POST', '/rma', [
 check('GET /rma/:id → 200', 200, request('GET', "/rma/$rmaId", [], $tokenAdmin));
 
 check('Representante atualiza RMA → 200', 200,
-    request('PUT', "/rma/$rmaId", ['status' => 'em_analise'], $tokenRep));
+    request('PUT', "/rma/$rmaId/status", ['status' => 'em_analise'], $tokenRep));
 
 check('Comprador atualiza RMA → 403', 403,
-    request('PUT', "/rma/$rmaId", ['status' => 'aprovado'], $tokenComp));
+    request('PUT', "/rma/$rmaId/status", ['status' => 'aprovado'], $tokenComp));
 
 // -------------------------------------------------------
 // 10. Logout
@@ -397,7 +403,7 @@ check('Comprador atualiza RMA → 403', 403,
 
 section('Logout');
 
-check('Logout → 200', 200, request('POST', '/auth/logout', [], $tokenAdmin));
+check('Logout → 200', 200, request('DELETE', '/auth/logout', [], $tokenAdmin));
 check('Token inválido após logout → 401', 401, request('GET', '/usuarios', [], $tokenAdmin));
 
 // -------------------------------------------------------

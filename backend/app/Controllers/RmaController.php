@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\RmaSolicitacao;
 use App\Models\Pedido;
+use App\Models\Estoque;
 use App\Middleware\Auth;
 
 class RmaController
@@ -67,9 +68,29 @@ class RmaController
             json(['erro' => 'Status inválido'], 422);
         }
 
+        $statusAnterior = $rma->status;
+
         if (!empty($body['status'])) $rma->status = $body['status'];
         $rma->save();
 
+        // Devolução concluída: devolve itens ao estoque
+        if ($body['status'] === 'concluido' && $statusAnterior !== 'concluido' && $rma->tipo === 'devolucao') {
+            $this->incrementarEstoque($rma);
+        }
+
         json($rma->toArray());
+    }
+
+    private function incrementarEstoque(RmaSolicitacao $rma): void
+    {
+        $itens = $rma->pedido()->with('itens')->first()?->itens ?? [];
+
+        foreach ($itens as $item) {
+            $estoque = Estoque::where('grade_id', $item->grade_id)->first();
+
+            if ($estoque) {
+                $estoque->increment('quantidade', $item->quantidade);
+            }
+        }
     }
 }
