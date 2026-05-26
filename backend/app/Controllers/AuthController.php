@@ -40,6 +40,7 @@ class AuthController
 
     public function logout(array $params): void
     {
+        $usuario = Auth::user();
         Usuario::where('id', $usuario['id'])->update(['token_autenticacao' => null]);
         json(['mensagem' => 'Logout realizado com sucesso']);
     }

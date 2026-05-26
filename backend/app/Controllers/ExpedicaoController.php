@@ -35,12 +35,12 @@ class ExpedicaoController
         $pedido = Pedido::find($body['pedido_id']);
         if (!$pedido) json(['erro' => 'Pedido não encontrado'], 404);
 
-        if ($pedido->status !== 'aprovado') {
-            json(['erro' => 'Só é possível abrir expedição para pedidos aprovados'], 422);
-        }
-
         if (Expedicao::where('pedido_id', $body['pedido_id'])->exists()) {
             json(['erro' => 'Já existe uma expedição para este pedido'], 409);
+        }
+
+        if ($pedido->status !== 'aprovado') {
+            json(['erro' => 'Só é possível abrir expedição para pedidos aprovados'], 422);
         }
 
         $expedicao = Expedicao::create([
