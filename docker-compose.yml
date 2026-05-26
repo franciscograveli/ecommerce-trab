@@ -16,8 +16,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: >
-      sh -c "composer install --no-interaction --quiet && apache2-foreground"
+    command: apache2-foreground
 
   frontend:
     image: nginx:alpine
