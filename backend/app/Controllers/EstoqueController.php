@@ -11,7 +11,6 @@ class EstoqueController
 {
     public function index(array $params): void
     {
-        Auth::handle();
         $query = Estoque::with(['grade.produto', 'deposito']);
 
         if (!empty($_GET['deposito_id'])) $query->where('deposito_id', $_GET['deposito_id']);
@@ -22,7 +21,6 @@ class EstoqueController
 
     public function store(array $params): void
     {
-        Auth::handle();
         $body = bodyParams();
 
         foreach (['grade_id', 'deposito_id', 'quantidade'] as $campo) {
@@ -51,13 +49,11 @@ class EstoqueController
 
     public function indexDepositos(array $params): void
     {
-        Auth::handle();
         json(Deposito::all()->toArray());
     }
 
     public function storeDeposito(array $params): void
     {
-        Auth::handle();
         $body = bodyParams();
         if (empty($body['nome'])) json(['erro' => "Campo 'nome' é obrigatório"], 422);
 

@@ -2,28 +2,34 @@
 
 namespace App;
 
+use App\Middleware\Auth;
+
 class Router
 {
     private array $routes = [];
 
-    public function get(string $path, array $handler): void
+    // $roles = null  → rota pública (sem autenticação)
+    // $roles = []    → qualquer usuário autenticado
+    // $roles = ['admin', 'representante'] → perfis permitidos
+
+    public function get(string $path, array $handler, ?array $roles = null): void
     {
-        $this->add('GET', $path, $handler);
+        $this->add('GET', $path, $handler, $roles);
     }
 
-    public function post(string $path, array $handler): void
+    public function post(string $path, array $handler, ?array $roles = null): void
     {
-        $this->add('POST', $path, $handler);
+        $this->add('POST', $path, $handler, $roles);
     }
 
-    public function put(string $path, array $handler): void
+    public function put(string $path, array $handler, ?array $roles = null): void
     {
-        $this->add('PUT', $path, $handler);
+        $this->add('PUT', $path, $handler, $roles);
     }
 
-    public function delete(string $path, array $handler): void
+    public function delete(string $path, array $handler, ?array $roles = null): void
     {
-        $this->add('DELETE', $path, $handler);
+        $this->add('DELETE', $path, $handler, $roles);
     }
 
     public function dispatch(string $method, string $uri): void
@@ -34,19 +40,42 @@ class Router
             }
 
             $params = $this->match($route['path'], $uri);
-            if ($params !== false) {
-                [$class, $action] = $route['handler'];
-                (new $class())->$action($params);
-                return;
+            if ($params === false) {
+                continue;
             }
+
+            $this->authorize($route['roles']);
+
+            [$class, $action] = $route['handler'];
+            (new $class())->$action($params);
+            return;
         }
 
         json(['erro' => 'Rota não encontrada'], 404);
     }
 
-    private function add(string $method, string $path, array $handler): void
+    private function add(string $method, string $path, array $handler, ?array $roles): void
     {
-        $this->routes[] = ['method' => $method, 'path' => $path, 'handler' => $handler];
+        $this->routes[] = [
+            'method'  => $method,
+            'path'    => $path,
+            'handler' => $handler,
+            'roles'   => $roles,
+        ];
+    }
+
+    private function authorize(?array $roles): void
+    {
+        if ($roles === null) {
+            return; // rota pública
+        }
+
+        if (empty($roles)) {
+            Auth::handle(); // qualquer autenticado
+            return;
+        }
+
+        Auth::require(...$roles);
     }
 
     private function match(string $routePath, string $uri): array|false

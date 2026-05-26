@@ -21,3 +21,9 @@ shell-db:
 db-reset:
 	docker compose down -v
 	docker compose up -d --build
+
+seed:
+	docker exec ecommerce-trab-backend-1 php /var/www/html/cli/seed.php
+
+test:
+	docker exec ecommerce-trab-backend-1 php /var/www/html/cli/test-api.php --base-url=http://localhost/api

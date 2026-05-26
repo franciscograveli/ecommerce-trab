@@ -9,13 +9,11 @@ class EmpresaController
 {
     public function index(array $params): void
     {
-        Auth::handle();
         json(Cliente::with('representante.usuario')->get()->toArray());
     }
 
     public function show(array $params): void
     {
-        Auth::handle();
         $cliente = Cliente::with(['representante.usuario', 'compradores.usuario'])->find($params['id']);
         if (!$cliente) json(['erro' => 'Empresa não encontrada'], 404);
         json($cliente->toArray());
@@ -23,7 +21,6 @@ class EmpresaController
 
     public function store(array $params): void
     {
-        Auth::handle();
         $body = bodyParams();
 
         foreach (['razao_social', 'cnpj'] as $campo) {
@@ -47,7 +44,6 @@ class EmpresaController
 
     public function update(array $params): void
     {
-        Auth::handle();
         $cliente = Cliente::find($params['id']);
         if (!$cliente) json(['erro' => 'Empresa não encontrada'], 404);
 
@@ -62,7 +58,6 @@ class EmpresaController
 
     public function destroy(array $params): void
     {
-        Auth::handle();
         $cliente = Cliente::find($params['id']);
         if (!$cliente) json(['erro' => 'Empresa não encontrada'], 404);
 

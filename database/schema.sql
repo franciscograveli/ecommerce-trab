@@ -3,8 +3,10 @@ USE ecommerce_b2b;
 
 CREATE TABLE perfis (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(50) NOT NULL UNIQUE -- Ex: 'admin', 'representante', 'comprador'
+    nome VARCHAR(50) NOT NULL UNIQUE
 );
+
+INSERT INTO perfis (nome) VALUES ('admin'), ('representante'), ('comprador');
 
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,

@@ -12,7 +12,6 @@ class PedidoController
 {
     public function index(array $params): void
     {
-        Auth::handle();
         $query = Pedido::with(['cliente', 'comprador.usuario', 'representante.usuario', 'itens.grade']);
 
         if (!empty($_GET['status']))     $query->where('status', $_GET['status']);
@@ -23,7 +22,6 @@ class PedidoController
 
     public function show(array $params): void
     {
-        Auth::handle();
         $pedido = Pedido::with([
             'cliente',
             'comprador.usuario',
@@ -39,7 +37,6 @@ class PedidoController
 
     public function store(array $params): void
     {
-        Auth::handle();
         $body = bodyParams();
 
         foreach (['cliente_id', 'comprador_id'] as $campo) {
@@ -59,7 +56,6 @@ class PedidoController
 
     public function update(array $params): void
     {
-        Auth::handle();
         $pedido = Pedido::find($params['id']);
         if (!$pedido) json(['erro' => 'Pedido não encontrado'], 404);
 
@@ -85,7 +81,6 @@ class PedidoController
 
     public function cancel(array $params): void
     {
-        Auth::handle();
         $pedido = Pedido::find($params['id']);
         if (!$pedido) json(['erro' => 'Pedido não encontrado'], 404);
 
@@ -103,7 +98,6 @@ class PedidoController
 
     public function indexItens(array $params): void
     {
-        Auth::handle();
         $pedido = Pedido::find($params['id']);
         if (!$pedido) json(['erro' => 'Pedido não encontrado'], 404);
         json($pedido->itens()->with('grade.produto')->get()->toArray());
@@ -111,7 +105,6 @@ class PedidoController
 
     public function storeItem(array $params): void
     {
-        Auth::handle();
         $pedido = Pedido::find($params['id']);
         if (!$pedido) json(['erro' => 'Pedido não encontrado'], 404);
 
@@ -140,7 +133,6 @@ class PedidoController
 
     public function destroyItem(array $params): void
     {
-        Auth::handle();
         $pedido = Pedido::find($params['id']);
         if (!$pedido) json(['erro' => 'Pedido não encontrado'], 404);
 
