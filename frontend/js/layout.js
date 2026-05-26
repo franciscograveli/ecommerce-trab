@@ -38,7 +38,7 @@ function Layout(pageTitle) {
   }
 
   const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
-  const perfil  = usuario.perfil || 'comprador';
+  const perfil  = (usuario.perfil?.nome ?? usuario.perfil ?? 'comprador').toLowerCase();
   const items   = NAV[perfil] || NAV.comprador;
   const current = window.location.pathname;
 
@@ -126,7 +126,7 @@ Layout._syncThemeIcon = function () {
 };
 
 Layout.logout = async function () {
-  try { await Api.post('/auth/logout'); } catch (_) { /* ignora */ }
+  try { await Api.del('/auth/logout'); } catch (_) { /* ignora */ }
   Api.clearToken();
   localStorage.removeItem('usuario');
   window.location.href = '/index.html';

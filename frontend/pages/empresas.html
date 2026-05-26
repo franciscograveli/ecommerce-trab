@@ -24,7 +24,7 @@
         <h2 class="text-brand-cream text-lg font-semibold">Empresas</h2>
         <p class="text-brand-tan text-xs mt-0.5">Gestão de clientes corporativos</p>
       </div>
-      <button onclick="Empresas.openModal()"
+      <button onclick="openModal()"
         class="flex items-center gap-2 bg-brand-primary hover:bg-amber-700 text-white
                text-xs font-semibold px-4 py-2 rounded-lg transition-colors">
         <i data-lucide="plus" class="w-3.5 h-3.5"></i>
@@ -65,7 +65,7 @@
 
       <div class="flex items-center justify-between mb-6">
         <h3 id="modal-title" class="text-brand-cream text-sm font-semibold">Nova Empresa</h3>
-        <button onclick="Empresas.closeModal()" class="text-brand-tan hover:text-brand-cream transition-colors">
+        <button onclick="closeModal()" class="text-brand-tan hover:text-brand-cream transition-colors">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
@@ -118,7 +118,7 @@
         </div>
 
         <div class="flex justify-end gap-3 mt-2 pt-2 border-t border-brand-brown">
-          <button type="button" onclick="Empresas.closeModal()"
+          <button type="button" onclick="closeModal()"
             class="px-4 py-2 text-xs font-medium text-brand-tan border border-brand-brown
                    rounded-lg hover:bg-brand-brown/30 transition-colors">
             Cancelar

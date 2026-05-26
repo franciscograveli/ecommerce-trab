@@ -151,18 +151,18 @@ document.getElementById('form-ajuste').addEventListener('submit', async (ev) => 
     ? parseInt(document.getElementById('aj-deposito-id-fixed').value)
     : parseInt(document.getElementById('aj-deposito').value);
 
+  const operacao = document.getElementById('aj-operacao').value;
   const body = {
     grade_id:    gradeId,
     deposito_id: depId,
     quantidade:  parseInt(document.getElementById('aj-quantidade').value),
-    operacao:    document.getElementById('aj-operacao').value,
   };
 
   btn.disabled = true;
   btn.textContent = 'Salvando…';
 
   try {
-    await Api.post('/estoque', body);
+    await Api.post(`/estoque/${operacao}`, body);
     showAlert('Estoque atualizado com sucesso.', 'success');
     closeModalAjuste();
     _estoque = await Api.get('/estoque');

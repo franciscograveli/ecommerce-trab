@@ -17,7 +17,7 @@ form.addEventListener('submit', async (e) => {
     Api.setToken(res.token);
     localStorage.setItem('usuario', JSON.stringify(res.usuario));
 
-    const perfil = res.usuario.perfil;
+    const perfil = (res.usuario.perfil?.nome ?? res.usuario.perfil ?? '').toLowerCase();
     window.location.href = perfil === 'comprador'
       ? '/pages/portal-pedidos.html'
       : '/pages/dashboard.html';
