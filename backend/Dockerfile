@@ -22,3 +22,6 @@ RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
+
+COPY composer.json composer.lock ./
+RUN composer install --no-interaction --optimize-autoloader

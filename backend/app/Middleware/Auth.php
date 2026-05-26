@@ -2,7 +2,7 @@
 
 namespace App\Middleware;
 
-use App\Models\Token;
+use App\Models\Usuario;
 
 class Auth
 {
@@ -14,15 +14,14 @@ class Auth
             json(['erro' => 'Token não informado'], 401);
         }
 
-        $token = Token::where('token', $raw)
-            ->where('expires_at', '>', date('Y-m-d H:i:s'))
-            ->with('usuario')
+        $usuario = Usuario::where('token_autenticacao', $raw)
+            ->with('perfil')
             ->first();
 
-        if (!$token) {
+        if (!$usuario) {
             json(['erro' => 'Token inválido ou expirado'], 401);
         }
 
-        return $token->usuario->toArray();
+        return $usuario->toArray();
     }
 }
