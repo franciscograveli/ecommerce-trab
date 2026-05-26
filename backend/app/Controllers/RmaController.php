@@ -10,7 +10,6 @@ class RmaController
 {
     public function index(array $params): void
     {
-        Auth::handle();
         $query = RmaSolicitacao::with(['pedido.cliente', 'comprador.usuario']);
 
         if (!empty($_GET['status']))       $query->where('status', $_GET['status']);
@@ -21,7 +20,6 @@ class RmaController
 
     public function show(array $params): void
     {
-        Auth::handle();
         $rma = RmaSolicitacao::with(['pedido.cliente', 'pedido.itens.grade', 'comprador.usuario'])->find($params['id']);
         if (!$rma) json(['erro' => 'Solicitação RMA não encontrada'], 404);
         json($rma->toArray());
@@ -29,7 +27,6 @@ class RmaController
 
     public function store(array $params): void
     {
-        Auth::handle();
         $body = bodyParams();
 
         foreach (['pedido_id', 'comprador_id', 'tipo', 'motivo'] as $campo) {
@@ -60,7 +57,6 @@ class RmaController
 
     public function update(array $params): void
     {
-        Auth::handle();
         $rma = RmaSolicitacao::find($params['id']);
         if (!$rma) json(['erro' => 'Solicitação RMA não encontrada'], 404);
 

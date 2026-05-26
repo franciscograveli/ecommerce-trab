@@ -10,58 +10,57 @@ use App\Controllers\ExpedicaoController;
 use App\Controllers\RmaController;
 
 $router->post('/auth/login',  [AuthController::class, 'login']);
-$router->post('/auth/logout', [AuthController::class, 'logout']);
+$router->post('/auth/logout', [AuthController::class, 'logout'], []);
 
-$router->get('/usuarios',         [UsuarioController::class, 'index']);
-$router->post('/usuarios',        [UsuarioController::class, 'store']);
-$router->get('/usuarios/{id}',    [UsuarioController::class, 'show']);
-$router->put('/usuarios/{id}',    [UsuarioController::class, 'update']);
-$router->delete('/usuarios/{id}', [UsuarioController::class, 'destroy']);
+$router->get('/usuarios',         [UsuarioController::class, 'index'],   ['admin']);
+$router->post('/usuarios',        [UsuarioController::class, 'store'],   ['admin']);
+$router->get('/usuarios/{id}',    [UsuarioController::class, 'show'],    ['admin']);
+$router->put('/usuarios/{id}',    [UsuarioController::class, 'update'],  ['admin']);
+$router->delete('/usuarios/{id}', [UsuarioController::class, 'destroy'], ['admin']);
 
-$router->get('/empresas',         [EmpresaController::class, 'index']);
-$router->post('/empresas',        [EmpresaController::class, 'store']);
-$router->get('/empresas/{id}',    [EmpresaController::class, 'show']);
-$router->put('/empresas/{id}',    [EmpresaController::class, 'update']);
-$router->delete('/empresas/{id}', [EmpresaController::class, 'destroy']);
+$router->get('/empresas',         [EmpresaController::class, 'index'],   ['admin', 'representante']);
+$router->post('/empresas',        [EmpresaController::class, 'store'],   ['admin']);
+$router->get('/empresas/{id}',    [EmpresaController::class, 'show'],    ['admin', 'representante']);
+$router->put('/empresas/{id}',    [EmpresaController::class, 'update'],  ['admin']);
+$router->delete('/empresas/{id}', [EmpresaController::class, 'destroy'], ['admin']);
 
-$router->get('/produtos',         [ProdutoController::class, 'index']);
-$router->post('/produtos',        [ProdutoController::class, 'store']);
-$router->get('/produtos/{id}',    [ProdutoController::class, 'show']);
-$router->put('/produtos/{id}',    [ProdutoController::class, 'update']);
-$router->delete('/produtos/{id}', [ProdutoController::class, 'destroy']);
+$router->get('/produtos',         [ProdutoController::class, 'index'],   ['admin', 'representante', 'comprador']);
+$router->post('/produtos',        [ProdutoController::class, 'store'],   ['admin']);
+$router->get('/produtos/tabelas', [ProdutoController::class, 'indexTabelas'], ['admin', 'representante', 'comprador']);
+$router->post('/produtos/tabelas',[ProdutoController::class, 'storeTabela'],  ['admin']);
+$router->get('/produtos/{id}',    [ProdutoController::class, 'show'],    ['admin', 'representante', 'comprador']);
+$router->put('/produtos/{id}',    [ProdutoController::class, 'update'],  ['admin']);
+$router->delete('/produtos/{id}', [ProdutoController::class, 'destroy'], ['admin']);
 
-$router->get('/produtos/{id}/grades',          [ProdutoController::class, 'indexGrades']);
-$router->post('/produtos/{id}/grades',         [ProdutoController::class, 'storeGrade']);
-$router->delete('/produtos/{id}/grades/{gid}', [ProdutoController::class, 'destroyGrade']);
+$router->get('/produtos/{id}/grades',          [ProdutoController::class, 'indexGrades'],  ['admin', 'representante', 'comprador']);
+$router->post('/produtos/{id}/grades',         [ProdutoController::class, 'storeGrade'],   ['admin']);
+$router->delete('/produtos/{id}/grades/{gid}', [ProdutoController::class, 'destroyGrade'], ['admin']);
 
-$router->get('/produtos/tabelas',   [ProdutoController::class, 'indexTabelas']);
-$router->post('/produtos/tabelas',  [ProdutoController::class, 'storeTabela']);
+$router->get('/produtos/{id}/precos',  [ProdutoController::class, 'indexPrecos'], ['admin', 'representante', 'comprador']);
+$router->post('/produtos/{id}/precos', [ProdutoController::class, 'storePreco'],  ['admin']);
 
-$router->get('/produtos/{id}/precos',  [ProdutoController::class, 'indexPrecos']);
-$router->post('/produtos/{id}/precos', [ProdutoController::class, 'storePreco']);
+$router->get('/pedidos',         [PedidoController::class, 'index'],  ['admin', 'representante', 'comprador']);
+$router->post('/pedidos',        [PedidoController::class, 'store'],  ['comprador', 'representante']);
+$router->get('/pedidos/{id}',    [PedidoController::class, 'show'],   ['admin', 'representante', 'comprador']);
+$router->put('/pedidos/{id}',    [PedidoController::class, 'update'], ['admin', 'representante']);
+$router->delete('/pedidos/{id}', [PedidoController::class, 'cancel'], ['admin', 'representante', 'comprador']);
 
-$router->get('/pedidos',         [PedidoController::class, 'index']);
-$router->post('/pedidos',        [PedidoController::class, 'store']);
-$router->get('/pedidos/{id}',    [PedidoController::class, 'show']);
-$router->put('/pedidos/{id}',    [PedidoController::class, 'update']);
-$router->delete('/pedidos/{id}', [PedidoController::class, 'cancel']);
+$router->get('/pedidos/{id}/itens',          [PedidoController::class, 'indexItens'],  ['admin', 'representante', 'comprador']);
+$router->post('/pedidos/{id}/itens',         [PedidoController::class, 'storeItem'],   ['comprador']);
+$router->delete('/pedidos/{id}/itens/{iid}', [PedidoController::class, 'destroyItem'], ['comprador', 'representante']);
 
-$router->get('/pedidos/{id}/itens',            [PedidoController::class, 'indexItens']);
-$router->post('/pedidos/{id}/itens',           [PedidoController::class, 'storeItem']);
-$router->delete('/pedidos/{id}/itens/{iid}',   [PedidoController::class, 'destroyItem']);
+$router->get('/estoque',    [EstoqueController::class, 'index'],         ['admin', 'representante']);
+$router->post('/estoque',   [EstoqueController::class, 'store'],         ['admin']);
+$router->get('/depositos',  [EstoqueController::class, 'indexDepositos'],['admin', 'representante']);
+$router->post('/depositos', [EstoqueController::class, 'storeDeposito'], ['admin']);
 
-$router->get('/estoque',          [EstoqueController::class, 'index']);
-$router->post('/estoque',         [EstoqueController::class, 'store']);
-$router->get('/depositos',        [EstoqueController::class, 'indexDepositos']);
-$router->post('/depositos',       [EstoqueController::class, 'storeDeposito']);
+$router->get('/expedicao',              [ExpedicaoController::class, 'index'],       ['admin', 'representante']);
+$router->post('/expedicao',             [ExpedicaoController::class, 'store'],       ['admin']);
+$router->get('/expedicao/{id}',         [ExpedicaoController::class, 'show'],        ['admin', 'representante']);
+$router->put('/expedicao/{id}',         [ExpedicaoController::class, 'update'],      ['admin']);
+$router->post('/expedicao/{id}/boleto', [ExpedicaoController::class, 'storeBoleto'], ['admin']);
 
-$router->get('/expedicao',              [ExpedicaoController::class, 'index']);
-$router->post('/expedicao',             [ExpedicaoController::class, 'store']);
-$router->get('/expedicao/{id}',         [ExpedicaoController::class, 'show']);
-$router->put('/expedicao/{id}',         [ExpedicaoController::class, 'update']);
-$router->post('/expedicao/{id}/boleto', [ExpedicaoController::class, 'storeBoleto']);
-
-$router->get('/rma',         [RmaController::class, 'index']);
-$router->post('/rma',        [RmaController::class, 'store']);
-$router->get('/rma/{id}',    [RmaController::class, 'show']);
-$router->put('/rma/{id}',    [RmaController::class, 'update']);
+$router->get('/rma',      [RmaController::class, 'index'],  ['admin', 'representante', 'comprador']);
+$router->post('/rma',     [RmaController::class, 'store'],  ['comprador']);
+$router->get('/rma/{id}', [RmaController::class, 'show'],   ['admin', 'representante', 'comprador']);
+$router->put('/rma/{id}', [RmaController::class, 'update'], ['admin', 'representante']);

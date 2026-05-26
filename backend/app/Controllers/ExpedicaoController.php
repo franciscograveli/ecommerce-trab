@@ -11,7 +11,6 @@ class ExpedicaoController
 {
     public function index(array $params): void
     {
-        Auth::handle();
         $query = Expedicao::with(['pedido.cliente', 'pedido.itens.grade']);
 
         if (!empty($_GET['status_logistica'])) {
@@ -23,7 +22,6 @@ class ExpedicaoController
 
     public function show(array $params): void
     {
-        Auth::handle();
         $expedicao = Expedicao::with(['pedido.cliente', 'pedido.itens.grade', 'pedido.boletos'])->find($params['id']);
         if (!$expedicao) json(['erro' => 'Expedição não encontrada'], 404);
         json($expedicao->toArray());
@@ -31,7 +29,6 @@ class ExpedicaoController
 
     public function store(array $params): void
     {
-        Auth::handle();
         $body = bodyParams();
         if (empty($body['pedido_id'])) json(['erro' => "Campo 'pedido_id' é obrigatório"], 422);
 
@@ -61,7 +58,6 @@ class ExpedicaoController
 
     public function update(array $params): void
     {
-        Auth::handle();
         $expedicao = Expedicao::find($params['id']);
         if (!$expedicao) json(['erro' => 'Expedição não encontrada'], 404);
 
@@ -86,7 +82,6 @@ class ExpedicaoController
 
     public function storeBoleto(array $params): void
     {
-        Auth::handle();
         $expedicao = Expedicao::find($params['id']);
         if (!$expedicao) json(['erro' => 'Expedição não encontrada'], 404);
 

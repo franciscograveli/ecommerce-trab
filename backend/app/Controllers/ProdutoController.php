@@ -12,13 +12,11 @@ class ProdutoController
 {
     public function index(array $params): void
     {
-        Auth::handle();
         json(Produto::with('grades')->get()->toArray());
     }
 
     public function show(array $params): void
     {
-        Auth::handle();
         $produto = Produto::with(['grades', 'precos.tabelaPreco'])->find($params['id']);
         if (!$produto) json(['erro' => 'Produto não encontrado'], 404);
         json($produto->toArray());
@@ -26,7 +24,6 @@ class ProdutoController
 
     public function store(array $params): void
     {
-        Auth::handle();
         $body = bodyParams();
         if (empty($body['nome'])) json(['erro' => "Campo 'nome' é obrigatório"], 422);
 
@@ -40,7 +37,6 @@ class ProdutoController
 
     public function update(array $params): void
     {
-        Auth::handle();
         $produto = Produto::find($params['id']);
         if (!$produto) json(['erro' => 'Produto não encontrado'], 404);
 
@@ -53,7 +49,6 @@ class ProdutoController
 
     public function destroy(array $params): void
     {
-        Auth::handle();
         $produto = Produto::find($params['id']);
         if (!$produto) json(['erro' => 'Produto não encontrado'], 404);
 
@@ -65,7 +60,6 @@ class ProdutoController
 
     public function indexGrades(array $params): void
     {
-        Auth::handle();
         $produto = Produto::find($params['id']);
         if (!$produto) json(['erro' => 'Produto não encontrado'], 404);
         json($produto->grades()->with('estoques.deposito')->get()->toArray());
@@ -73,7 +67,6 @@ class ProdutoController
 
     public function storeGrade(array $params): void
     {
-        Auth::handle();
         $produto = Produto::find($params['id']);
         if (!$produto) json(['erro' => 'Produto não encontrado'], 404);
 
@@ -97,7 +90,6 @@ class ProdutoController
 
     public function destroyGrade(array $params): void
     {
-        Auth::handle();
         $grade = Grade::where('produto_id', $params['id'])->find($params['gid']);
         if (!$grade) json(['erro' => 'Grade não encontrada'], 404);
 
@@ -109,13 +101,11 @@ class ProdutoController
 
     public function indexTabelas(array $params): void
     {
-        Auth::handle();
         json(TabelaPreco::all()->toArray());
     }
 
     public function storeTabela(array $params): void
     {
-        Auth::handle();
         $body = bodyParams();
         if (empty($body['nome'])) json(['erro' => "Campo 'nome' é obrigatório"], 422);
 
@@ -131,7 +121,6 @@ class ProdutoController
 
     public function indexPrecos(array $params): void
     {
-        Auth::handle();
         $produto = Produto::find($params['id']);
         if (!$produto) json(['erro' => 'Produto não encontrado'], 404);
         json($produto->precos()->with('tabelaPreco')->get()->toArray());
@@ -139,7 +128,6 @@ class ProdutoController
 
     public function storePreco(array $params): void
     {
-        Auth::handle();
         $produto = Produto::find($params['id']);
         if (!$produto) json(['erro' => 'Produto não encontrado'], 404);
 
