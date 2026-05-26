@@ -59,10 +59,16 @@ function Layout(pageTitle) {
 
   document.getElementById('sidebar').innerHTML = `
     <div class="flex flex-col h-full bg-brand-dark">
-      <!-- Logo -->
-      <div class="px-5 py-5 border-b border-brand-brown">
-        <span class="text-brand-gold font-bold text-base tracking-wide">B2B Atacado</span>
-        <p class="text-brand-tan text-[10px] tracking-widest uppercase mt-0.5">Destilados & Spirits</p>
+      <!-- Logo + fechar (mobile) -->
+      <div class="px-5 py-5 border-b border-brand-brown flex items-center justify-between">
+        <div>
+          <span class="text-brand-gold font-bold text-base tracking-wide">B2B Atacado</span>
+          <p class="text-brand-tan text-[10px] tracking-widest uppercase mt-0.5">Destilados & Spirits</p>
+        </div>
+        <button onclick="Layout.closeSidebar()" id="btn-close-sidebar"
+          class="lg:hidden text-brand-tan hover:text-brand-cream transition-colors -mr-1">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
       </div>
 
       <!-- Nav -->
@@ -88,15 +94,27 @@ function Layout(pageTitle) {
       </div>
     </div>`;
 
+  // Backdrop para fechar sidebar no mobile
+  const backdrop = document.createElement('div');
+  backdrop.id = 'sidebar-backdrop';
+  backdrop.onclick = Layout.closeSidebar;
+  document.body.appendChild(backdrop);
+
   // ── Topbar ────────────────────────────────────────────────────
   document.getElementById('topbar').innerHTML = `
-    <div class="flex items-center justify-between h-full px-6
+    <div class="flex items-center justify-between h-full px-4 lg:px-6
                 bg-brand-black border-b border-brand-brown">
-      <h1 class="text-brand-cream text-sm font-semibold">${pageTitle}</h1>
+      <div class="flex items-center gap-3">
+        <button onclick="Layout.toggleSidebar()" id="btn-hamburger"
+          class="lg:hidden text-brand-tan hover:text-brand-cream transition-colors">
+          <i data-lucide="menu" class="w-4 h-4"></i>
+        </button>
+        <h1 class="text-brand-cream text-sm font-semibold">${pageTitle}</h1>
+      </div>
       <button onclick="Layout.logout()"
         class="text-brand-tan hover:text-red-400 text-xs font-medium transition-colors flex items-center gap-1.5">
         <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
-        Sair
+        <span class="hidden sm:inline">Sair</span>
       </button>
     </div>`;
 
@@ -106,6 +124,24 @@ function Layout(pageTitle) {
   // Sincroniza ícone do botão com o tema atual
   Layout._syncThemeIcon();
 }
+
+Layout.toggleSidebar = function () {
+  const open = document.body.classList.toggle('sidebar-open');
+  const hamburger = document.getElementById('btn-hamburger');
+  if (hamburger) {
+    hamburger.querySelector('i').setAttribute('data-lucide', open ? 'x' : 'menu');
+    if (window.lucide) lucide.createIcons();
+  }
+};
+
+Layout.closeSidebar = function () {
+  document.body.classList.remove('sidebar-open');
+  const hamburger = document.getElementById('btn-hamburger');
+  if (hamburger) {
+    hamburger.querySelector('i').setAttribute('data-lucide', 'menu');
+    if (window.lucide) lucide.createIcons();
+  }
+};
 
 Layout.toggleTheme = function () {
   const html    = document.documentElement;
@@ -131,3 +167,7 @@ Layout.logout = async function () {
   localStorage.removeItem('usuario');
   window.location.href = '/index.html';
 };
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') Layout.closeSidebar();
+});
