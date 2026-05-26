@@ -82,6 +82,7 @@ CREATE TABLE grades (
 CREATE TABLE tabelas_precos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
+    regiao VARCHAR(100) NULL,
     regra_volume_minimo INT DEFAULT 1
 );
 

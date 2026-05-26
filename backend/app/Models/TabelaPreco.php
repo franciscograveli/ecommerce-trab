@@ -10,7 +10,7 @@ class TabelaPreco extends Model
 
     public $timestamps = false;
 
-    protected $fillable = ['nome', 'regra_volume_minimo'];
+    protected $fillable = ['nome', 'regiao', 'regra_volume_minimo'];
 
     public function produtoPrecos()
     {

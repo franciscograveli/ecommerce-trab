@@ -21,19 +21,28 @@
     <div class="flex items-center justify-between mb-6">
       <div>
         <h2 class="text-brand-cream text-lg font-semibold">Produtos</h2>
-        <p class="text-brand-tan text-xs mt-0.5">Catálogo de produtos, grades e preços</p>
+        <p class="text-brand-tan text-xs mt-0.5">Catálogo, grades e tabelas de preço</p>
       </div>
-      <button onclick="openModalProduto()"
-        class="flex items-center gap-2 bg-brand-primary hover:bg-amber-700 text-white
-               text-xs font-semibold px-4 py-2 rounded-lg transition-colors">
-        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-        Novo Produto
-      </button>
+      <div class="flex gap-2">
+        <button onclick="openModalTabela()"
+          class="flex items-center gap-2 border border-brand-brown text-brand-tan hover:text-brand-cream
+                 hover:border-brand-tan text-xs font-semibold px-4 py-2 rounded-lg transition-colors">
+          <i data-lucide="tags" class="w-3.5 h-3.5"></i>
+          Nova Tabela de Preço
+        </button>
+        <button onclick="openModalProduto()"
+          class="flex items-center gap-2 bg-brand-primary hover:bg-amber-700 text-white
+                 text-xs font-semibold px-4 py-2 rounded-lg transition-colors">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          Novo Produto
+        </button>
+      </div>
     </div>
 
     <div id="alert" class="mb-4"></div>
 
-    <div class="bg-brand-dark border border-brand-brown rounded-xl overflow-hidden">
+    <!-- Tabela de produtos -->
+    <div class="bg-brand-dark border border-brand-brown rounded-xl overflow-hidden mb-6">
       <div class="overflow-x-auto">
         <table class="w-full text-xs">
           <thead>
@@ -48,6 +57,28 @@
             <tr>
               <td colspan="4" class="px-5 py-10 text-center text-brand-tan">Carregando…</td>
             </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tabelas de preço -->
+    <div class="bg-brand-dark border border-brand-brown rounded-xl overflow-hidden">
+      <div class="px-5 py-3 border-b border-brand-brown">
+        <h3 class="text-brand-cream text-xs font-semibold uppercase tracking-wider">Tabelas de Preço</h3>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="border-b border-brand-brown">
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Nome</th>
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Região</th>
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Vol. Mínimo</th>
+              <th class="px-5 py-3"></th>
+            </tr>
+          </thead>
+          <tbody id="tbody-tabelas">
+            <tr><td colspan="4" class="px-5 py-10 text-center text-brand-tan">Carregando…</td></tr>
           </tbody>
         </table>
       </div>
