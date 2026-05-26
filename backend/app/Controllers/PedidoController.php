@@ -6,6 +6,7 @@ use App\Models\Pedido;
 use App\Models\PedidoItem;
 use App\Models\Grade;
 use App\Models\Cliente;
+use App\Models\Estoque;
 use App\Middleware\Auth;
 
 class PedidoController
@@ -71,6 +72,9 @@ class PedidoController
             if ($cliente && $pedido->valor_total > $cliente->limite_credito) {
                 json(['erro' => 'Valor do pedido excede o limite de crédito do cliente'], 422);
             }
+
+            $this->validarEstoque($pedido);
+            $this->decrementarEstoque($pedido);
         }
 
         if (!empty($body['status'])) $pedido->status = $body['status'];
@@ -153,5 +157,39 @@ class PedidoController
 
         $pedido->valor_total = $total ?? 0;
         $pedido->save();
+    }
+
+    private function validarEstoque(Pedido $pedido): void
+    {
+        $itens = $pedido->itens()->get();
+
+        foreach ($itens as $item) {
+            $totalEmEstoque = Estoque::where('grade_id', $item->grade_id)
+                ->sum('quantidade');
+
+            if ($totalEmEstoque < $item->quantidade) {
+                json([
+                    'erro'    => 'Estoque insuficiente para aprovação do pedido',
+                    'grade_id'=> $item->grade_id,
+                    'disponivel' => $totalEmEstoque,
+                    'necessario' => $item->quantidade,
+                ], 422);
+            }
+        }
+    }
+
+    private function decrementarEstoque(Pedido $pedido): void
+    {
+        foreach ($pedido->itens()->get() as $item) {
+            // Decrementa do primeiro depósito com saldo suficiente
+            $estoque = Estoque::where('grade_id', $item->grade_id)
+                ->where('quantidade', '>=', $item->quantidade)
+                ->orderBy('quantidade', 'desc')
+                ->first();
+
+            if ($estoque) {
+                $estoque->decrement('quantidade', $item->quantidade);
+            }
+        }
     }
 }
