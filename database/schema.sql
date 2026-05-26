@@ -14,10 +14,18 @@ CREATE TABLE usuarios (
     nome VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     senha VARCHAR(255) NOT NULL,
-    token_autenticacao VARCHAR(255) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (perfil_id) REFERENCES perfis(id)
+);
+
+CREATE TABLE tokens (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    token      VARCHAR(255) NOT NULL UNIQUE,
+    expires_at DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
 CREATE TABLE representantes (
