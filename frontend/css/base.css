@@ -19,7 +19,8 @@
   --brand-cream-rgb:   253, 250, 245;  /* #FDFAF5 */
 }
 
-/* ── Tema escuro (padrão) ────────────────────────────────────── */
+/* ── Tema escuro (padrão) — pausado para revisão de paleta ──── */
+/*
 :root,
 [data-theme="dark"] {
   color-scheme: dark;
@@ -44,6 +45,7 @@
   --color-warning-bg:   #1c1200;
   --color-warning-text: rgb(var(--brand-amber-rgb));
 }
+*/
 /* ── Tema claro ──────────────────────────────────────────────── */
 [data-theme="light"] {
   color-scheme: light;
