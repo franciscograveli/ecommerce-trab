@@ -121,3 +121,7 @@
   margin-top: var(--topbar-h);
   min-height: calc(100vh - var(--topbar-h));
 }
+
+.bg-brand-primary {
+  background-color: rgb(var(--brand-primary-rgb));
+}
