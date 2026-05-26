@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Empresas — B2B Atacado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="/js/tw-config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body class="bg-brand-black font-sans">
+
+  <div id="sidebar"></div>
+  <div id="topbar"></div>
+
+  <main id="main" class="p-6 bg-brand-black">
+
+    <!-- Cabeçalho da página -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-brand-cream text-lg font-semibold">Empresas</h2>
+        <p class="text-brand-tan text-xs mt-0.5">Gestão de clientes corporativos</p>
+      </div>
+      <button onclick="openModal()"
+        class="flex items-center gap-2 bg-brand-primary hover:bg-amber-700 text-white
+               text-xs font-semibold px-4 py-2 rounded-lg transition-colors">
+        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+        Nova Empresa
+      </button>
+    </div>
+
+    <!-- Alerta -->
+    <div id="alert" class="mb-4"></div>
+
+    <!-- Tabela -->
+    <div class="bg-brand-dark border border-brand-brown rounded-xl overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="border-b border-brand-brown">
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Razão Social</th>
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">CNPJ</th>
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Lim. Crédito</th>
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Representante</th>
+              <th class="px-5 py-3"></th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr>
+              <td colspan="5" class="px-5 py-10 text-center text-brand-tan">Carregando…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal criar / editar -->
+  <div id="modal" class="hidden fixed inset-0 bg-brand-black/75 z-50 flex items-center justify-center p-4">
+    <div class="bg-brand-dark border border-brand-brown rounded-2xl w-full max-w-lg p-7">
+
+      <div class="flex items-center justify-between mb-6">
+        <h3 id="modal-title" class="text-brand-cream text-sm font-semibold">Nova Empresa</h3>
+        <button onclick="closeModal()" class="text-brand-tan hover:text-brand-cream transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form id="form-empresa" class="flex flex-col gap-4">
+        <input type="hidden" id="f-id">
+
+        <div>
+          <label class="block text-xs font-medium text-brand-tan mb-1.5">Razão Social *</label>
+          <input type="text" id="f-razao" required
+            class="w-full bg-brand-black border border-brand-brown rounded-lg px-3 py-2.5
+                   text-sm text-brand-cream placeholder-brand-tan
+                   focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-brand-tan mb-1.5">CNPJ *</label>
+            <input type="text" id="f-cnpj" required placeholder="00.000.000/0001-00"
+              class="w-full bg-brand-black border border-brand-brown rounded-lg px-3 py-2.5
+                     text-sm text-brand-cream placeholder-brand-tan
+                     focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-brand-tan mb-1.5">Inscrição Estadual</label>
+            <input type="text" id="f-ie"
+              class="w-full bg-brand-black border border-brand-brown rounded-lg px-3 py-2.5
+                     text-sm text-brand-cream placeholder-brand-tan
+                     focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-brand-tan mb-1.5">Limite de Crédito (R$)</label>
+            <input type="number" id="f-limite" min="0" step="0.01" placeholder="0,00"
+              class="w-full bg-brand-black border border-brand-brown rounded-lg px-3 py-2.5
+                     text-sm text-brand-cream placeholder-brand-tan
+                     focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-brand-tan mb-1.5">Representante</label>
+            <select id="f-rep"
+              class="w-full bg-brand-black border border-brand-brown rounded-lg px-3 py-2.5
+                     text-sm text-brand-cream
+                     focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors">
+              <option value="">Sem representante</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-2 pt-2 border-t border-brand-brown">
+          <button type="button" onclick="closeModal()"
+            class="px-4 py-2 text-xs font-medium text-brand-tan border border-brand-brown
+                   rounded-lg hover:bg-brand-brown/30 transition-colors">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-salvar"
+            class="px-4 py-2 text-xs font-semibold bg-brand-primary hover:bg-amber-700
+                   text-white rounded-lg transition-colors">
+            Salvar
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/pages/empresas.js"></script>
+  <script>Layout('Empresas');</script>
+</body>
+</html>

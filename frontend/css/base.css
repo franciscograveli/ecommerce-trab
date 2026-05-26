@@ -1,0 +1,103 @@
+/* ── Layout ─────────────────────────────────────────────────── */
+:root {
+  --sidebar-w: 15rem;
+  --topbar-h:  3.75rem;
+}
+
+/* ── Brand RGB channels ─────────────────────────────────────── */
+:root {
+  --brand-black-rgb:   18,  16,  13;   /* #12100D */
+  --brand-dark-rgb:    44,  26,   6;   /* #2C1A06 */
+  --brand-primary-rgb: 200, 114,  26;  /* #C8721A */
+  --brand-gold-rgb:    232, 200, 130;  /* #E8C882 */
+  --brand-amber-rgb:   232, 168,  74;  /* #E8A84A */
+  --brand-brown-rgb:   107,  66,  38;  /* #6B4226 */
+  --brand-tan-rgb:     139,  96,  64;  /* #8B6040 */
+  --brand-cream-rgb:   253, 250, 245;  /* #FDFAF5 */
+}
+
+/* ── Tema (light) ────────────────────────────────────────────── */
+:root {
+  color-scheme: light;
+
+  --color-bg:           rgb(var(--brand-cream-rgb));
+  --color-surface:      #F5EDE0;
+  --color-border:       #D4B896;
+  --color-border-soft:  #E8D5BC;
+
+  --color-text:         rgb(var(--brand-black-rgb));
+  --color-text-muted:   rgb(var(--brand-brown-rgb));
+  --color-text-subtle:  rgb(var(--brand-tan-rgb));
+
+  --color-accent:       rgb(var(--brand-primary-rgb));
+  --color-accent-hover: #A85C10;
+  --color-gold:         #9B6E1A;
+
+  --color-success-bg:   #dcfce7;
+  --color-success-text: #166534;
+  --color-error-bg:     #fee2e2;
+  --color-error-text:   #991b1b;
+  --color-warning-bg:   #fef9c3;
+  --color-warning-text: #854d0e;
+}
+
+/* ── Layout shell (authenticated pages) ────────────────────── */
+#sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--sidebar-w);
+  overflow-y: auto;
+  z-index: 50;
+  background-color: var(--color-bg);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.55);
+  z-index: 40;
+}
+
+#topbar {
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-w);
+  right: 0;
+  height: var(--topbar-h);
+  z-index: 30;
+}
+
+#main {
+  margin-left: var(--sidebar-w);
+  margin-top: var(--topbar-h);
+  min-height: calc(100vh - var(--topbar-h));
+}
+
+/* ── Mobile: sidebar como overlay ───────────────────────────── */
+@media (max-width: 1023px) {
+  #sidebar {
+    transform: translateX(-100%);
+  }
+
+  #topbar {
+    left: 0;
+  }
+
+  #main {
+    margin-left: 0;
+  }
+
+  body.sidebar-open #sidebar {
+    transform: translateX(0);
+  }
+
+  body.sidebar-open #sidebar-backdrop {
+    display: block;
+  }
+}
+
+.bg-brand-primary {
+  background-color: rgb(var(--brand-primary-rgb));
+}
