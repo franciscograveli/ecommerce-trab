@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — B2B Atacado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="/js/tw-config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body class="bg-brand-black font-sans">
+
+  <div id="sidebar"></div>
+  <div id="topbar"></div>
+
+  <main id="main" class="p-6 bg-brand-black">
+
+    <!-- Stat cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+
+      <div class="bg-brand-dark border border-brand-brown rounded-xl p-5">
+        <p class="text-brand-tan text-xs font-medium uppercase tracking-wider mb-2">Pedidos hoje</p>
+        <p id="stat-pedidos" class="text-brand-cream text-3xl font-bold">—</p>
+      </div>
+
+      <div class="bg-brand-dark border border-brand-brown rounded-xl p-5">
+        <p class="text-brand-tan text-xs font-medium uppercase tracking-wider mb-2">Aguard. aprovação</p>
+        <p id="stat-bloqueados" class="text-brand-amber text-3xl font-bold">—</p>
+      </div>
+
+      <div class="bg-brand-dark border border-brand-brown rounded-xl p-5">
+        <p class="text-brand-tan text-xs font-medium uppercase tracking-wider mb-2">Em expedição</p>
+        <p id="stat-expedicao" class="text-brand-gold text-3xl font-bold">—</p>
+      </div>
+
+      <div class="bg-brand-dark border border-brand-brown rounded-xl p-5">
+        <p class="text-brand-tan text-xs font-medium uppercase tracking-wider mb-2">RMAs abertos</p>
+        <p id="stat-rma" class="text-red-400 text-3xl font-bold">—</p>
+      </div>
+
+    </div>
+
+    <!-- Pedidos recentes -->
+    <div class="bg-brand-dark border border-brand-brown rounded-xl overflow-hidden">
+
+      <div class="px-6 py-4 border-b border-brand-brown flex items-center justify-between">
+        <h2 class="text-brand-cream text-sm font-semibold">Pedidos recentes</h2>
+        <a href="/pages/pedidos.html" class="text-brand-primary hover:text-brand-amber text-xs font-medium transition-colors">
+          Ver todos
+        </a>
+      </div>
+
+      <div id="tabela-pedidos" class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="border-b border-brand-brown">
+              <th class="px-6 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">#</th>
+              <th class="px-6 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Empresa</th>
+              <th class="px-6 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Valor</th>
+              <th class="px-6 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-pedidos">
+            <tr>
+              <td colspan="4" class="px-6 py-8 text-center text-brand-tan">Carregando…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script>
+    Layout('Dashboard');
+
+    // Status → label + cor Tailwind
+    const STATUS_BADGE = {
+      orcamento:                     ['Orçamento',   'bg-brand-brown text-brand-cream'],
+      aguardando_aprovacao_credito:  ['Aguard. crédito', 'bg-yellow-900 text-yellow-300'],
+      aprovado:                      ['Aprovado',    'bg-green-900 text-green-300'],
+      em_separacao:                  ['Separação',   'bg-blue-900 text-blue-300'],
+      enviado:                       ['Enviado',     'bg-indigo-900 text-indigo-300'],
+      entregue:                      ['Entregue',    'bg-emerald-900 text-emerald-300'],
+      cancelado:                     ['Cancelado',   'bg-red-950 text-red-400'],
+    };
+
+    async function init() {
+      try {
+        const [pedidos, rmas, expedicoes] = await Promise.all([
+          Api.get('/pedidos'),
+          Api.get('/rma'),
+          Api.get('/expedicao'),
+        ]);
+
+        document.getElementById('stat-pedidos').textContent    = pedidos.length;
+        document.getElementById('stat-bloqueados').textContent = pedidos.filter(p => p.status === 'aguardando_aprovacao_credito').length;
+        document.getElementById('stat-expedicao').textContent  = expedicoes.filter(e => e.status_logistica !== 'em_transito').length;
+        document.getElementById('stat-rma').textContent        = rmas.filter(r => r.status === 'aberto').length;
+
+        const recentes = pedidos.slice(0, 10);
+        const tbody = document.getElementById('tbody-pedidos');
+
+        if (recentes.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-brand-tan">Nenhum pedido ainda.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = recentes.map(p => {
+          const [label, cls] = STATUS_BADGE[p.status] || ['—', 'bg-brand-brown text-brand-tan'];
+          const empresa = p.cliente?.razao_social || '—';
+          const valor   = Number(p.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+          return `
+            <tr class="border-b border-brand-brown last:border-0 hover:bg-brand-brown/20 transition-colors">
+              <td class="px-6 py-3.5 text-brand-tan font-mono">#${p.id}</td>
+              <td class="px-6 py-3.5 text-brand-cream">${empresa}</td>
+              <td class="px-6 py-3.5 text-brand-cream font-medium">${valor}</td>
+              <td class="px-6 py-3.5">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${cls}">
+                  ${label}
+                </span>
+              </td>
+            </tr>`;
+        }).join('');
+
+      } catch (err) {
+        document.getElementById('tbody-pedidos').innerHTML =
+          `<tr><td colspan="4" class="px-6 py-6 text-center text-red-400 text-xs">Erro ao carregar dados.</td></tr>`;
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
