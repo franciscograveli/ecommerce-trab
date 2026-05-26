@@ -1,0 +1,29 @@
+/* ── CSS Variables ─────────────────────────────────────────── */
+:root {
+  --sidebar-w: 15rem;
+  --topbar-h:  3.75rem;
+}
+
+/* ── Layout shell (authenticated pages) ────────────────────── */
+#sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--sidebar-w);
+  overflow-y: auto;
+  z-index: 40;
+}
+
+#topbar {
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-w);
+  right: 0;
+  height: var(--topbar-h);
+  z-index: 30;
+}
+
+#main {
+  margin-left: var(--sidebar-w);
+  margin-top: var(--topbar-h);
+  min-height: calc(100vh - var(--topbar-h));
+}
