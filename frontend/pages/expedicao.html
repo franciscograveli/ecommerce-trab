@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expedição — B2B Atacado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="/js/tw-config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body class="bg-brand-black font-sans">
+
+  <div id="sidebar"></div>
+  <div id="topbar"></div>
+
+  <main id="main" class="p-6 bg-brand-black">
+
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-brand-cream text-lg font-semibold">Expedição</h2>
+        <p class="text-brand-tan text-xs mt-0.5">Separação, embalagem e despacho</p>
+      </div>
+      <button onclick="openModalNovaExp()"
+        class="flex items-center gap-2 bg-brand-primary hover:bg-amber-700 text-white
+               text-xs font-semibold px-4 py-2 rounded-lg transition-colors">
+        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+        Nova Expedição
+      </button>
+    </div>
+
+    <div id="alert" class="mb-4"></div>
+
+    <!-- Filtro de status -->
+    <div class="flex gap-2 mb-4 flex-wrap">
+      <button onclick="setFiltro('')"       data-f="" class="filtro-btn filtro-ativo">Todos</button>
+      <button onclick="setFiltro('picking_pendente')"  data-f="picking_pendente"  class="filtro-btn">Picking Pendente</button>
+      <button onclick="setFiltro('picking_concluido')" data-f="picking_concluido" class="filtro-btn">Picking OK</button>
+      <button onclick="setFiltro('packing')"           data-f="packing"           class="filtro-btn">Packing</button>
+      <button onclick="setFiltro('pronto_envio')"      data-f="pronto_envio"      class="filtro-btn">Pronto Envio</button>
+      <button onclick="setFiltro('em_transito')"       data-f="em_transito"       class="filtro-btn">Em Trânsito</button>
+    </div>
+
+    <div class="bg-brand-dark border border-brand-brown rounded-xl overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="border-b border-brand-brown">
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Pedido</th>
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Empresa</th>
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Status</th>
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Transportadora</th>
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Rastreio</th>
+              <th class="px-5 py-3"></th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="6" class="px-5 py-10 text-center text-brand-tan">Carregando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal atualizar expedição -->
+  <div id="modal-exp" class="hidden fixed inset-0 bg-brand-black/75 z-50 flex items-center justify-center p-4">
+    <div class="bg-brand-dark border border-brand-brown rounded-2xl w-full max-w-lg p-7">
+      <div class="flex items-center justify-between mb-6">
+        <h3 id="modal-exp-title" class="text-brand-cream text-sm font-semibold">Atualizar Expedição</h3>
+        <button onclick="closeModalExp()" class="text-brand-tan hover:text-brand-cream transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <form id="form-exp" class="flex flex-col gap-4">
+        <input type="hidden" id="exp-id">
+
+        <div>
+          <label class="block text-xs font-medium text-brand-tan mb-1.5">Status Logístico</label>
+          <select id="exp-status"
+            class="w-full bg-brand-black border border-brand-brown rounded-lg px-3 py-2.5
+                   text-sm text-brand-cream focus:outline-none focus:border-brand-primary transition-colors">
+            <option value="picking_pendente">Picking Pendente</option>
+            <option value="picking_concluido">Picking Concluído</option>
+            <option value="packing">Packing</option>
+            <option value="pronto_envio">Pronto para Envio</option>
+            <option value="em_transito">Em Trânsito</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-brand-tan mb-1.5">Transportadora</label>
+            <input type="text" id="exp-transportadora" placeholder="Ex: Correios"
+              class="w-full bg-brand-black border border-brand-brown rounded-lg px-3 py-2.5
+                     text-sm text-brand-cream placeholder-brand-tan
+                     focus:outline-none focus:border-brand-primary transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-brand-tan mb-1.5">Código de Rastreio</label>
+            <input type="text" id="exp-rastreio" placeholder="AA000000000BR"
+              class="w-full bg-brand-black border border-brand-brown rounded-lg px-3 py-2.5
+                     text-sm text-brand-cream placeholder-brand-tan
+                     focus:outline-none focus:border-brand-primary transition-colors">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-brand-tan mb-1.5">Valor do Frete (R$)</label>
+          <input type="number" id="exp-frete" min="0" step="0.01"
+            class="w-full bg-brand-black border border-brand-brown rounded-lg px-3 py-2.5
+                   text-sm text-brand-cream placeholder-brand-tan
+                   focus:outline-none focus:border-brand-primary transition-colors">
+        </div>
+
+        <!-- Boleto -->
+        <div id="section-boleto" class="border-t border-brand-brown/40 pt-4">
+          <p class="text-brand-tan text-xs font-semibold uppercase tracking-wider mb-3">Emitir Boleto</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="col-span-2">
+              <label class="block text-xs font-medium text-brand-tan mb-1.5">Linha Digitável</label>
+              <input type="text" id="bol-linha"
+                class="w-full bg-brand-black border border-brand-brown rounded-lg px-3 py-2.5
+                       text-sm text-brand-cream placeholder-brand-tan
+                       focus:outline-none focus:border-brand-primary transition-colors">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-brand-tan mb-1.5">URL PDF</label>
+              <input type="url" id="bol-url"
+                class="w-full bg-brand-black border border-brand-brown rounded-lg px-3 py-2.5
+                       text-sm text-brand-cream placeholder-brand-tan
+                       focus:outline-none focus:border-brand-primary transition-colors">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-brand-tan mb-1.5">Vencimento</label>
+              <input type="date" id="bol-vencimento"
+                class="w-full bg-brand-black border border-brand-brown rounded-lg px-3 py-2.5
+                       text-sm text-brand-cream
+                       focus:outline-none focus:border-brand-primary transition-colors">
+            </div>
+          </div>
+          <button type="button" onclick="emitirBoleto()"
+            class="mt-3 flex items-center gap-1.5 text-xs font-medium text-brand-amber
+                   hover:text-brand-gold transition-colors">
+            <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
+            Emitir boleto
+          </button>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-2 pt-2 border-t border-brand-brown">
+          <button type="button" onclick="closeModalExp()"
+            class="px-4 py-2 text-xs font-medium text-brand-tan border border-brand-brown
+                   rounded-lg hover:bg-brand-brown/30 transition-colors">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-exp"
+            class="px-4 py-2 text-xs font-semibold bg-brand-primary hover:bg-amber-700
+                   text-white rounded-lg transition-colors">
+            Salvar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal nova expedição -->
+  <div id="modal-nova" class="hidden fixed inset-0 bg-brand-black/75 z-50 flex items-center justify-center p-4">
+    <div class="bg-brand-dark border border-brand-brown rounded-2xl w-full max-w-sm p-7">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-brand-cream text-sm font-semibold">Nova Expedição</h3>
+        <button onclick="closeModalNovaExp()" class="text-brand-tan hover:text-brand-cream transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <form id="form-nova" class="flex flex-col gap-4">
+        <div>
+          <label class="block text-xs font-medium text-brand-tan mb-1.5">Pedido aprovado *</label>
+          <select id="nova-pedido" required
+            class="w-full bg-brand-black border border-brand-brown rounded-lg px-3 py-2.5
+                   text-sm text-brand-cream focus:outline-none focus:border-brand-primary transition-colors">
+            <option value="">Selecione…</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-brand-tan mb-1.5">Transportadora</label>
+          <input type="text" id="nova-transportadora"
+            class="w-full bg-brand-black border border-brand-brown rounded-lg px-3 py-2.5
+                   text-sm text-brand-cream placeholder-brand-tan
+                   focus:outline-none focus:border-brand-primary transition-colors">
+        </div>
+        <div class="flex justify-end gap-3 pt-2 border-t border-brand-brown">
+          <button type="button" onclick="closeModalNovaExp()"
+            class="px-4 py-2 text-xs font-medium text-brand-tan border border-brand-brown
+                   rounded-lg hover:bg-brand-brown/30 transition-colors">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-nova"
+            class="px-4 py-2 text-xs font-semibold bg-brand-primary hover:bg-amber-700
+                   text-white rounded-lg transition-colors">
+            Criar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <style>
+    .filtro-btn {
+      padding: 0.375rem 0.875rem;
+      border-radius: 0.5rem;
+      font-size: 0.7rem;
+      font-weight: 500;
+      border: 1px solid rgb(var(--brand-brown-rgb));
+      color: rgb(var(--brand-tan-rgb));
+      transition: all 0.15s;
+      cursor: pointer;
+      background: transparent;
+    }
+    .filtro-btn:hover { color: rgb(var(--brand-cream-rgb)); border-color: rgb(var(--brand-tan-rgb)); }
+    .filtro-btn.filtro-ativo {
+      background: rgb(var(--brand-primary-rgb) / 0.2);
+      border-color: rgb(var(--brand-primary-rgb));
+      color: rgb(var(--brand-amber-rgb));
+    }
+  </style>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/pages/expedicao.js"></script>
+  <script>Layout('Expedição');</script>
+</body>
+</html>
