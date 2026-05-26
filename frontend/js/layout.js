@@ -1,10 +1,3 @@
-// ── Tema ─────────────────────────────────────────────────────
-(function () {
-  const saved = localStorage.getItem('theme');
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  document.documentElement.dataset.theme = saved || (prefersDark ? 'dark' : 'light');
-})();
-
 // Nav items por perfil — ícones via lucide (data-lucide)
 const NAV = {
   admin: [
@@ -79,18 +72,10 @@ function Layout(pageTitle) {
         ${links}
       </nav>
 
-      <!-- Perfil + tema -->
-      <div class="px-4 py-4 border-t border-brand-brown flex items-center justify-between gap-2">
-        <div class="min-w-0">
-          <p class="text-brand-cream text-xs font-medium truncate">${usuario.nome || ''}</p>
-          <span class="text-brand-tan text-[10px] capitalize">${perfil}</span>
-        </div>
-        <button onclick="Layout.toggleTheme()" id="btn-theme"
-          title="Alternar tema"
-          class="shrink-0 text-brand-tan hover:text-brand-amber transition-colors">
-          <i data-lucide="sun" class="w-3.5 h-3.5 hidden" id="icon-light"></i>
-          <i data-lucide="moon" class="w-3.5 h-3.5" id="icon-dark"></i>
-        </button>
+      <!-- Perfil -->
+      <div class="px-4 py-4 border-t border-brand-brown">
+        <p class="text-brand-cream text-xs font-medium truncate">${usuario.nome || ''}</p>
+        <span class="text-brand-tan text-[10px] capitalize">${perfil}</span>
       </div>
     </div>`;
 
@@ -121,8 +106,6 @@ function Layout(pageTitle) {
   // Renderiza ícones lucide
   if (window.lucide) lucide.createIcons();
 
-  // Sincroniza ícone do botão com o tema atual
-  Layout._syncThemeIcon();
 }
 
 Layout.toggleSidebar = function () {
@@ -141,24 +124,6 @@ Layout.closeSidebar = function () {
     hamburger.querySelector('i').setAttribute('data-lucide', 'menu');
     if (window.lucide) lucide.createIcons();
   }
-};
-
-Layout.toggleTheme = function () {
-  const html    = document.documentElement;
-  const current = html.dataset.theme || 'dark';
-  const next    = current === 'dark' ? 'light' : 'dark';
-  html.dataset.theme = next;
-  localStorage.setItem('theme', next);
-  Layout._syncThemeIcon();
-};
-
-Layout._syncThemeIcon = function () {
-  const isDark = (document.documentElement.dataset.theme || 'dark') === 'dark';
-  const iconLight = document.getElementById('icon-light');
-  const iconDark  = document.getElementById('icon-dark');
-  if (!iconLight || !iconDark) return;
-  iconLight.classList.toggle('hidden', isDark);
-  iconDark.classList.toggle('hidden', !isDark);
 };
 
 Layout.logout = async function () {

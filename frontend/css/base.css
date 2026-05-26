@@ -5,9 +5,6 @@
 }
 
 /* ── Brand RGB channels ─────────────────────────────────────── */
-/* Valores fixos da paleta — nunca mudam entre temas.           */
-/* Formato "r, g, b" para que Tailwind possa aplicar opacidade  */
-/* via rgb(var(--brand-*-rgb) / <alpha-value>).                 */
 :root {
   --brand-black-rgb:   18,  16,  13;   /* #12100D */
   --brand-dark-rgb:    44,  26,   6;   /* #2C1A06 */
@@ -19,35 +16,8 @@
   --brand-cream-rgb:   253, 250, 245;  /* #FDFAF5 */
 }
 
-/* ── Tema escuro (padrão) — pausado para revisão de paleta ──── */
-/*
-:root,
-[data-theme="dark"] {
-  color-scheme: dark;
-
-  --color-bg:           rgb(var(--brand-black-rgb));
-  --color-surface:      rgb(var(--brand-dark-rgb));
-  --color-border:       rgb(var(--brand-brown-rgb));
-  --color-border-soft:  rgb(var(--brand-brown-rgb) / 0.4);
-
-  --color-text:         rgb(var(--brand-cream-rgb));
-  --color-text-muted:   rgb(var(--brand-tan-rgb));
-  --color-text-subtle:  rgb(var(--brand-brown-rgb));
-
-  --color-accent:       rgb(var(--brand-primary-rgb));
-  --color-accent-hover: rgb(var(--brand-amber-rgb));
-  --color-gold:         rgb(var(--brand-gold-rgb));
-
-  --color-success-bg:   #052e16;
-  --color-success-text: #86efac;
-  --color-error-bg:     #1c0a0a;
-  --color-error-text:   #fca5a5;
-  --color-warning-bg:   #1c1200;
-  --color-warning-text: rgb(var(--brand-amber-rgb));
-}
-*/
-/* ── Tema claro ──────────────────────────────────────────────── */
-[data-theme="light"] {
+/* ── Tema (light) ────────────────────────────────────────────── */
+:root {
   color-scheme: light;
 
   --color-bg:           rgb(var(--brand-cream-rgb));
@@ -71,33 +41,6 @@
   --color-warning-text: #854d0e;
 }
 
-/* ── Preferência do sistema (sem data-theme explícito) ──────── */
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    color-scheme: light;
-
-    --color-bg:           rgb(var(--brand-cream-rgb));
-    --color-surface:      #F5EDE0;
-    --color-border:       #D4B896;
-    --color-border-soft:  #E8D5BC;
-
-    --color-text:         rgb(var(--brand-black-rgb));
-    --color-text-muted:   rgb(var(--brand-brown-rgb));
-    --color-text-subtle:  rgb(var(--brand-tan-rgb));
-
-    --color-accent:       rgb(var(--brand-primary-rgb));
-    --color-accent-hover: #A85C10;
-    --color-gold:         #9B6E1A;
-
-    --color-success-bg:   #dcfce7;
-    --color-success-text: #166534;
-    --color-error-bg:     #fee2e2;
-    --color-error-text:   #991b1b;
-    --color-warning-bg:   #fef9c3;
-    --color-warning-text: #854d0e;
-  }
-}
-
 /* ── Layout shell (authenticated pages) ────────────────────── */
 #sidebar {
   position: fixed;
@@ -105,7 +48,7 @@
   width: var(--sidebar-w);
   overflow-y: auto;
   z-index: 50;
-  background-color: #2C1A06;
+  background-color: var(--color-bg);
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
