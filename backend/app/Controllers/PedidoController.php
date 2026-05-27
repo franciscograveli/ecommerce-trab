@@ -7,13 +7,21 @@ use App\Models\PedidoItem;
 use App\Models\Grade;
 use App\Models\Cliente;
 use App\Models\Estoque;
+use App\Models\Representante;
 use App\Middleware\Auth;
 
 class PedidoController
 {
     public function index(array $params): void
     {
+        $usuario = Auth::handle();
+
         $query = Pedido::with(['cliente', 'comprador.usuario', 'representante.usuario', 'itens.grade']);
+
+        if ($usuario['perfil'] === 'representante') {
+            $repId = Representante::where('usuario_id', $usuario['id'])->value('id');
+            $query->whereHas('cliente', fn($q) => $q->where('representante_id', $repId));
+        }
 
         if (!empty($_GET['status']))     $query->where('status', $_GET['status']);
         if (!empty($_GET['cliente_id'])) $query->where('cliente_id', $_GET['cliente_id']);

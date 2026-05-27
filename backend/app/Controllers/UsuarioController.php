@@ -78,7 +78,13 @@ class UsuarioController
         $usuario->fill(array_intersect_key($body, array_flip(['nome', 'email', 'senha', 'perfil_id'])));
         $usuario->save();
 
-        json($usuario->load('perfil')->toArray());
+        if (isset($body['percentual_comissao']) && $usuario->representante) {
+            $usuario->representante->update([
+                'percentual_comissao' => $body['percentual_comissao'],
+            ]);
+        }
+
+        json($usuario->load(['perfil', 'representante'])->toArray());
     }
 
     public function destroy(array $params): void

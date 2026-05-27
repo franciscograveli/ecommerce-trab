@@ -18,7 +18,7 @@ class AuthController
             json(['erro' => 'E-mail e senha são obrigatórios'], 422);
         }
 
-        $usuario = Usuario::where('email', $email)->with('perfil')->first();
+        $usuario = Usuario::where('email', $email)->with(['perfil', 'representante', 'comprador'])->first();
 
         if (!$usuario || !password_verify($senha, $usuario->senha)) {
             json(['erro' => 'Credenciais inválidas'], 401);
@@ -30,15 +30,27 @@ class AuthController
             'expires_at' => date('Y-m-d H:i:s', strtotime('+8 hours')),
         ]);
 
-        json([
+        $perfil = $usuario->perfil->nome ?? null;
+
+        $dadosPerfil = [];
+        if ($perfil === 'representante' && $usuario->representante) {
+            $dadosPerfil['representante'] = ['id' => $usuario->representante->id];
+        } elseif ($perfil === 'comprador' && $usuario->comprador) {
+            $dadosPerfil['comprador'] = [
+                'id'         => $usuario->comprador->id,
+                'cliente_id' => $usuario->comprador->cliente_id,
+            ];
+        }
+
+        json(array_merge([
             'token'   => $token->token,
             'usuario' => [
                 'id'     => $usuario->id,
                 'nome'   => $usuario->nome,
                 'email'  => $usuario->email,
-                'perfil' => $usuario->perfil->nome ?? null,
+                'perfil' => $perfil,
             ],
-        ]);
+        ], $dadosPerfil));
     }
 
     public function logout(array $params): void
