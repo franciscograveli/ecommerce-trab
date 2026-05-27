@@ -77,9 +77,15 @@ class PedidoController
         }
 
         if (!empty($body['status']) && $body['status'] === 'aprovado') {
-            $cliente = Cliente::find($pedido->cliente_id);
-            if ($cliente && $pedido->valor_total > $cliente->limite_credito) {
-                json(['erro' => 'Valor do pedido excede o limite de crédito do cliente'], 422);
+            // Vindo de 'orcamento': verifica crédito e auto-roteia se estourado
+            // Vindo de 'aguardando_aprovacao_credito': admin override, pula o check
+            if ($pedido->status === 'orcamento') {
+                $cliente = Cliente::find($pedido->cliente_id);
+                if ($cliente && $pedido->valor_total > $cliente->limite_credito) {
+                    $pedido->status = 'aguardando_aprovacao_credito';
+                    $pedido->save();
+                    json($pedido->toArray());
+                }
             }
 
             $this->validarEstoque($pedido);
