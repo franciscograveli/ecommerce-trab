@@ -83,18 +83,28 @@ document.getElementById('form-empresa').addEventListener('submit', async (ev) =>
 
 // ── Inicialização ────────────────────────────────────────────────
 async function init() {
+  const _usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+  const perfil   = (_usuario.perfil?.nome ?? _usuario.perfil ?? '').toLowerCase();
+  const isRep    = perfil === 'representante';
+
   try {
-    const [empresas, usuarios] = await Promise.all([
+    const [rEmpresa, rUsuarios] = await Promise.allSettled([
       Api.get('/empresas'),
-      Api.get('/usuarios'),
+      isRep ? Promise.resolve([]) : Api.get('/usuarios'),
     ]);
 
-    _empresas = empresas;
+    _empresas = rEmpresa.status === 'fulfilled' ? rEmpresa.value : [];
 
-    const reps = usuarios.filter(u => u.perfil?.nome === 'representante' && u.representante);
-    const sel  = document.getElementById('f-rep');
-    sel.innerHTML = `<option value="">Sem representante</option>`
-      + reps.map(u => `<option value="${u.representante.id}">${u.nome}</option>`).join('');
+    const sel = document.getElementById('f-rep');
+    if (isRep) {
+      sel.innerHTML = `<option value="${_usuario.representante?.id ?? ''}">${_usuario.nome}</option>`;
+      sel.disabled  = true;
+    } else {
+      const usuarios = rUsuarios.status === 'fulfilled' ? rUsuarios.value : [];
+      const reps     = usuarios.filter(u => u.perfil?.nome === 'representante' && u.representante);
+      sel.innerHTML  = `<option value="">Sem representante</option>`
+        + reps.map(u => `<option value="${u.representante.id}">${u.nome}</option>`).join('');
+    }
 
     renderTabela();
   } catch {

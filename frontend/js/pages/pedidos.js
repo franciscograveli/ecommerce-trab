@@ -72,7 +72,7 @@ const _usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
 
 // ── Init ──────────────────────────────────────────────────────────
 async function init() {
-  const perfil = _usuario.perfil;
+  const perfil = (_usuario.perfil?.nome ?? _usuario.perfil ?? '').toLowerCase();
 
   // Comprador não cria orçamento diretamente nesta tela
   if (perfil === 'comprador') {
@@ -136,7 +136,7 @@ function renderTabela() {
     return;
   }
 
-  const podeEditar = ['admin', 'representante'].includes(_usuario.perfil);
+  const podeEditar = ['admin', 'representante'].includes((_usuario.perfil?.nome ?? _usuario.perfil ?? '').toLowerCase());
   const podeCancelar = ['orcamento', 'aguardando_aprovacao_credito'];
 
   tbody.innerHTML = lista.map(p => {
