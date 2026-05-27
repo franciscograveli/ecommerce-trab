@@ -1,3 +1,91 @@
+// ── Modais ────────────────────────────────────────────────────────
+Modal.build('modal-exp', {
+  title: 'Atualizar Expedição',
+  width: 'max-w-lg',
+  content: `
+    <form id="form-exp" class="flex flex-col gap-4">
+      <input type="hidden" id="exp-id">
+
+      <div>
+        <label class="${Modal.LABEL}">Status Logístico</label>
+        <select id="exp-status" class="${Modal.SELECT}">
+          <option value="picking_pendente">Picking Pendente</option>
+          <option value="picking_concluido">Picking Concluído</option>
+          <option value="packing">Packing</option>
+          <option value="pronto_envio">Pronto para Envio</option>
+          <option value="em_transito">Em Trânsito</option>
+        </select>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="${Modal.LABEL}">Transportadora</label>
+          <input type="text" id="exp-transportadora" placeholder="Ex: Correios" class="${Modal.INPUT}">
+        </div>
+        <div>
+          <label class="${Modal.LABEL}">Código de Rastreio</label>
+          <input type="text" id="exp-rastreio" placeholder="AA000000000BR" class="${Modal.INPUT}">
+        </div>
+      </div>
+
+      <div>
+        <label class="${Modal.LABEL}">Valor do Frete (R$)</label>
+        <input type="number" id="exp-frete" min="0" step="0.01" class="${Modal.INPUT}">
+      </div>
+
+      <div id="section-boleto" class="border-t border-gray-100 pt-4">
+        <p class="${Modal.SECTION}">Emitir Boleto</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="col-span-2">
+            <label class="${Modal.LABEL}">Linha Digitável</label>
+            <input type="text" id="bol-linha" class="${Modal.INPUT}">
+          </div>
+          <div>
+            <label class="${Modal.LABEL}">URL PDF</label>
+            <input type="url" id="bol-url" class="${Modal.INPUT}">
+          </div>
+          <div>
+            <label class="${Modal.LABEL}">Vencimento</label>
+            <input type="date" id="bol-vencimento" class="${Modal.INPUT}">
+          </div>
+        </div>
+        <button type="button" onclick="emitirBoleto()"
+          class="mt-3 flex items-center gap-1.5 text-xs font-medium text-brand-amber hover:text-brand-gold transition-colors">
+          <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
+          Emitir boleto
+        </button>
+      </div>
+
+      <div class="flex justify-end gap-3 mt-2 pt-2 ${Modal.DIVIDER}">
+        <button type="button" onclick="closeModalExp()" class="${Modal.BTN_CANCEL}">Cancelar</button>
+        <button type="submit" id="btn-exp" class="${Modal.BTN_PRIMARY}">Salvar</button>
+      </div>
+    </form>`,
+});
+
+Modal.build('modal-nova', {
+  title: 'Nova Expedição',
+  width: 'max-w-sm',
+  content: `
+    <form id="form-nova" class="flex flex-col gap-4">
+      <div>
+        <label class="${Modal.LABEL}">Pedido aprovado *</label>
+        <select id="nova-pedido" required class="${Modal.SELECT}">
+          <option value="">Selecione…</option>
+        </select>
+      </div>
+      <div>
+        <label class="${Modal.LABEL}">Transportadora</label>
+        <input type="text" id="nova-transportadora" class="${Modal.INPUT}">
+      </div>
+      <div class="flex justify-end gap-3 pt-2 ${Modal.DIVIDER}">
+        <button type="button" onclick="closeModalNovaExp()" class="${Modal.BTN_CANCEL}">Cancelar</button>
+        <button type="submit" id="btn-nova" class="${Modal.BTN_PRIMARY}">Criar</button>
+      </div>
+    </form>`,
+});
+
+// ── Estado ────────────────────────────────────────────────────────
 let _expedicoes = [];
 let _filtro     = '';
 
@@ -9,6 +97,62 @@ const STATUS_LABEL = {
   em_transito:       ['Em Trânsito',      'bg-emerald-900/60 text-emerald-300'],
 };
 
+// ── Submits ───────────────────────────────────────────────────────
+document.getElementById('form-exp').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const id  = document.getElementById('exp-id').value;
+  const btn = document.getElementById('btn-exp');
+
+  const body = {
+    status_logistica: document.getElementById('exp-status').value,
+    transportadora:   document.getElementById('exp-transportadora').value.trim() || null,
+    codigo_rastreio:  document.getElementById('exp-rastreio').value.trim() || null,
+    valor_frete:      parseFloat(document.getElementById('exp-frete').value) || null,
+  };
+
+  btn.disabled = true;
+  btn.textContent = 'Salvando…';
+
+  try {
+    await Api.put(`/expedicao/${id}`, body);
+    showAlert('Expedição atualizada.', 'success');
+    closeModalExp();
+    _expedicoes = await Api.get('/expedicao');
+    renderTabela();
+  } catch (err) {
+    showAlert(err.erro ?? 'Erro ao atualizar expedição.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Salvar';
+  }
+});
+
+document.getElementById('form-nova').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const btn = document.getElementById('btn-nova');
+  const body = {
+    pedido_id:      parseInt(document.getElementById('nova-pedido').value),
+    transportadora: document.getElementById('nova-transportadora').value.trim() || null,
+  };
+
+  btn.disabled = true;
+  btn.textContent = 'Criando…';
+
+  try {
+    await Api.post('/expedicao', body);
+    showAlert('Expedição criada com sucesso.', 'success');
+    closeModalNovaExp();
+    _expedicoes = await Api.get('/expedicao');
+    renderTabela();
+  } catch (err) {
+    showAlert(err.erro ?? 'Erro ao criar expedição.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Criar';
+  }
+});
+
+// ── Inicialização ────────────────────────────────────────────────
 async function init() {
   try {
     const [expedicoes, pedidos] = await Promise.all([
@@ -17,7 +161,6 @@ async function init() {
     ]);
     _expedicoes = expedicoes;
 
-    // Pedidos aprovados sem expedição
     const idsComExp = new Set(expedicoes.map(e => e.pedido_id));
     const aprovados = pedidos.filter(p => p.status === 'aprovado' && !idsComExp.has(p.id));
     const sel = document.getElementById('nova-pedido');
@@ -34,6 +177,7 @@ async function init() {
   }
 }
 
+// ── Tabela ────────────────────────────────────────────────────────
 function setFiltro(status) {
   _filtro = status;
   document.querySelectorAll('.filtro-btn').forEach(btn => {
@@ -89,7 +233,7 @@ function renderTabela() {
   if (window.lucide) lucide.createIcons();
 }
 
-// ── Modal atualizar expedição ────────────────────────────────
+// ── Modal expedição ───────────────────────────────────────────────
 function openModalExp(id) {
   const e = _expedicoes.find(x => x.id === id);
   document.getElementById('exp-id').value             = id;
@@ -100,48 +244,18 @@ function openModalExp(id) {
   document.getElementById('bol-linha').value          = '';
   document.getElementById('bol-url').value            = '';
   document.getElementById('bol-vencimento').value     = '';
-  document.getElementById('modal-exp').classList.remove('hidden');
-  if (window.lucide) lucide.createIcons();
+  Modal.open('modal-exp');
 }
 
 function closeModalExp() {
-  document.getElementById('modal-exp').classList.add('hidden');
+  Modal.close('modal-exp');
 }
 
-document.getElementById('form-exp').addEventListener('submit', async (ev) => {
-  ev.preventDefault();
-  const id  = document.getElementById('exp-id').value;
-  const btn = document.getElementById('btn-exp');
-
-  const body = {
-    status_logistica: document.getElementById('exp-status').value,
-    transportadora:   document.getElementById('exp-transportadora').value.trim() || null,
-    codigo_rastreio:  document.getElementById('exp-rastreio').value.trim() || null,
-    valor_frete:      parseFloat(document.getElementById('exp-frete').value) || null,
-  };
-
-  btn.disabled = true;
-  btn.textContent = 'Salvando…';
-
-  try {
-    await Api.put(`/expedicao/${id}`, body);
-    showAlert('Expedição atualizada.', 'success');
-    closeModalExp();
-    _expedicoes = await Api.get('/expedicao');
-    renderTabela();
-  } catch (err) {
-    showAlert(err.erro ?? 'Erro ao atualizar expedição.', 'error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Salvar';
-  }
-});
-
 async function emitirBoleto() {
-  const id      = document.getElementById('exp-id').value;
-  const linha   = document.getElementById('bol-linha').value.trim();
-  const url     = document.getElementById('bol-url').value.trim();
-  const venc    = document.getElementById('bol-vencimento').value;
+  const id    = document.getElementById('exp-id').value;
+  const linha = document.getElementById('bol-linha').value.trim();
+  const url   = document.getElementById('bol-url').value.trim();
+  const venc  = document.getElementById('bol-vencimento').value;
 
   if (!linha || !url || !venc) {
     showAlert('Preencha linha digitável, URL e vencimento.', 'error');
@@ -150,9 +264,9 @@ async function emitirBoleto() {
 
   try {
     await Api.post(`/expedicao/${id}/boleto`, {
-      linha_digitavel:  linha,
-      url_pdf:          url,
-      data_vencimento:  venc,
+      linha_digitavel: linha,
+      url_pdf:         url,
+      data_vencimento: venc,
     });
     showAlert('Boleto emitido com sucesso.', 'success');
     document.getElementById('bol-linha').value      = '';
@@ -163,41 +277,17 @@ async function emitirBoleto() {
   }
 }
 
-// ── Modal nova expedição ─────────────────────────────────────
+// ── Modal nova expedição ──────────────────────────────────────────
 function openModalNovaExp() {
-  document.getElementById('modal-nova').classList.remove('hidden');
+  Modal.open('modal-nova');
 }
 
 function closeModalNovaExp() {
-  document.getElementById('modal-nova').classList.add('hidden');
+  Modal.close('modal-nova');
   document.getElementById('form-nova').reset();
 }
 
-document.getElementById('form-nova').addEventListener('submit', async (ev) => {
-  ev.preventDefault();
-  const btn = document.getElementById('btn-nova');
-  const body = {
-    pedido_id:      parseInt(document.getElementById('nova-pedido').value),
-    transportadora: document.getElementById('nova-transportadora').value.trim() || null,
-  };
-
-  btn.disabled = true;
-  btn.textContent = 'Criando…';
-
-  try {
-    await Api.post('/expedicao', body);
-    showAlert('Expedição criada com sucesso.', 'success');
-    closeModalNovaExp();
-    _expedicoes = await Api.get('/expedicao');
-    renderTabela();
-  } catch (err) {
-    showAlert(err.erro ?? 'Erro ao criar expedição.', 'error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Criar';
-  }
-});
-
+// ── Alert ─────────────────────────────────────────────────────────
 function showAlert(msg, type) {
   const cls = type === 'success'
     ? 'bg-green-950 border border-green-800 text-green-300'
@@ -207,4 +297,5 @@ function showAlert(msg, type) {
   setTimeout(() => { el.innerHTML = ''; }, 4000);
 }
 
+// ── Boot ──────────────────────────────────────────────────────────
 init();

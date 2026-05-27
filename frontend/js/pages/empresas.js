@@ -1,5 +1,85 @@
-// Estado do módulo
+// ── Modal ─────────────────────────────────────────────────────────
+Modal.build('modal-empresa', {
+  title: 'Nova Empresa',
+  width: 'max-w-lg',
+  content: `
+    <form id="form-empresa" class="flex flex-col gap-4">
+      <input type="hidden" id="f-id">
+
+      <div>
+        <label class="${Modal.LABEL}">Razão Social *</label>
+        <input type="text" id="f-razao" required class="${Modal.INPUT}">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="${Modal.LABEL}">CNPJ *</label>
+          <input type="text" id="f-cnpj" required placeholder="00.000.000/0001-00" class="${Modal.INPUT}">
+        </div>
+        <div>
+          <label class="${Modal.LABEL}">Inscrição Estadual</label>
+          <input type="text" id="f-ie" class="${Modal.INPUT}">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="${Modal.LABEL}">Limite de Crédito (R$)</label>
+          <input type="number" id="f-limite" min="0" step="0.01" placeholder="0,00" class="${Modal.INPUT}">
+        </div>
+        <div>
+          <label class="${Modal.LABEL}">Representante</label>
+          <select id="f-rep" class="${Modal.SELECT}">
+            <option value="">Sem representante</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 mt-2 pt-2 ${Modal.DIVIDER}">
+        <button type="button" onclick="closeModal()" class="${Modal.BTN_CANCEL}">Cancelar</button>
+        <button type="submit" id="btn-salvar" class="${Modal.BTN_PRIMARY}">Salvar</button>
+      </div>
+    </form>`,
+});
+
+// ── Estado ────────────────────────────────────────────────────────
 let _empresas = [];
+
+// ── Submit ────────────────────────────────────────────────────────
+document.getElementById('form-empresa').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const id  = document.getElementById('f-id').value;
+  const btn = document.getElementById('btn-salvar');
+
+  const body = {
+    razao_social:       document.getElementById('f-razao').value.trim(),
+    cnpj:               document.getElementById('f-cnpj').value.trim(),
+    inscricao_estadual: document.getElementById('f-ie').value.trim() || null,
+    limite_credito:     parseFloat(document.getElementById('f-limite').value) || 0,
+    representante_id:   document.getElementById('f-rep').value || null,
+  };
+
+  btn.disabled = true;
+  btn.textContent = 'Salvando…';
+
+  try {
+    if (id) {
+      await Api.put(`/empresas/${id}`, body);
+      showAlert('Empresa atualizada com sucesso.', 'success');
+    } else {
+      await Api.post('/empresas', body);
+      showAlert('Empresa cadastrada com sucesso.', 'success');
+    }
+    closeModal();
+    _empresas = await Api.get('/empresas');
+    renderTabela();
+  } catch (err) {
+    showAlert(err.erro ?? 'Erro ao salvar empresa.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Salvar';
+  }
+});
 
 // ── Inicialização ────────────────────────────────────────────────
 async function init() {
@@ -22,7 +102,7 @@ async function init() {
   }
 }
 
-// ── Tabela ───────────────────────────────────────────────────────
+// ── Tabela ────────────────────────────────────────────────────────
 function renderTabela() {
   const tbody = document.getElementById('tbody');
 
@@ -63,11 +143,11 @@ function renderTabela() {
   if (window.lucide) lucide.createIcons();
 }
 
-// ── Modal ─────────────────────────────────────────────────────────
+// ── Abrir / fechar modal ──────────────────────────────────────────
 function openModal(id = null) {
   const e = id ? _empresas.find(x => x.id === id) : null;
 
-  document.getElementById('modal-title').textContent = e ? 'Editar Empresa' : 'Nova Empresa';
+  document.getElementById('modal-empresa-title').textContent = e ? 'Editar Empresa' : 'Nova Empresa';
   document.getElementById('f-id').value     = e?.id ?? '';
   document.getElementById('f-razao').value  = e?.razao_social ?? '';
   document.getElementById('f-cnpj').value   = e?.cnpj ?? '';
@@ -75,49 +155,13 @@ function openModal(id = null) {
   document.getElementById('f-limite').value = e?.limite_credito ?? '';
   document.getElementById('f-rep').value    = e?.representante_id ?? '';
 
-  document.getElementById('modal').classList.remove('hidden');
+  Modal.open('modal-empresa');
 }
 
 function closeModal() {
-  document.getElementById('modal').classList.add('hidden');
+  Modal.close('modal-empresa');
   document.getElementById('form-empresa').reset();
 }
-
-// ── Submit ────────────────────────────────────────────────────────
-document.getElementById('form-empresa').addEventListener('submit', async (ev) => {
-  ev.preventDefault();
-  const id  = document.getElementById('f-id').value;
-  const btn = document.getElementById('btn-salvar');
-
-  const body = {
-    razao_social:       document.getElementById('f-razao').value.trim(),
-    cnpj:               document.getElementById('f-cnpj').value.trim(),
-    inscricao_estadual: document.getElementById('f-ie').value.trim() || null,
-    limite_credito:     parseFloat(document.getElementById('f-limite').value) || 0,
-    representante_id:   document.getElementById('f-rep').value || null,
-  };
-
-  btn.disabled = true;
-  btn.textContent = 'Salvando…';
-
-  try {
-    if (id) {
-      await Api.put(`/empresas/${id}`, body);
-      showAlert('Empresa atualizada com sucesso.', 'success');
-    } else {
-      await Api.post('/empresas', body);
-      showAlert('Empresa cadastrada com sucesso.', 'success');
-    }
-    closeModal();
-    _empresas = await Api.get('/empresas');
-    renderTabela();
-  } catch (err) {
-    showAlert(err.erro ?? 'Erro ao salvar empresa.', 'error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Salvar';
-  }
-});
 
 // ── Excluir ───────────────────────────────────────────────────────
 async function excluir(id) {
