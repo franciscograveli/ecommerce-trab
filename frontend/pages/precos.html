@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Empresas — B2B Atacado</title>
+  <title>Tabelas de Preço — B2B Atacado</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="/js/tw-config.js"></script>
@@ -20,14 +20,14 @@
 
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h2 class="text-brand-cream text-lg font-semibold">Empresas</h2>
-        <p class="text-brand-tan text-xs mt-0.5">Gestão de clientes corporativos</p>
+        <h2 class="text-brand-cream text-lg font-semibold">Tabelas de Preço</h2>
+        <p class="text-brand-tan text-xs mt-0.5">Grupos de precificação por volume</p>
       </div>
       <button onclick="openModal()"
         class="flex items-center gap-2 bg-brand-primary hover:bg-amber-700 text-white
                text-xs font-semibold px-4 py-2 rounded-lg transition-colors">
         <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-        Nova Empresa
+        Nova Tabela
       </button>
     </div>
 
@@ -38,28 +38,29 @@
         <table class="w-full text-xs">
           <thead>
             <tr class="border-b border-brand-brown">
-              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Razão Social</th>
-              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">CNPJ</th>
-              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Lim. Crédito</th>
-              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Representante</th>
-              <th class="px-5 py-3"></th>
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Nome</th>
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Vol. mínimo</th>
             </tr>
           </thead>
           <tbody id="tbody">
             <tr>
-              <td colspan="5" class="px-5 py-10 text-center text-brand-tan">Carregando…</td>
+              <td colspan="2" class="px-5 py-10 text-center text-brand-tan">Carregando…</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
+    <p class="text-brand-brown text-[11px] mt-3">
+      Edição e exclusão de tabelas estará disponível em breve.
+    </p>
+
   </main>
 
   <script src="/js/api.js"></script>
   <script src="/js/layout.js"></script>
   <script src="/js/modal.js"></script>
-  <script src="/js/pages/empresas.js"></script>
-  <script>Layout('Empresas');</script>
+  <script src="/js/pages/precos.js"></script>
+  <script>Layout('Tabelas de Preço');</script>
 </body>
 </html>

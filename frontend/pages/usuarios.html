@@ -56,96 +56,9 @@
 
   </main>
 
-  <!-- Modal criar / editar -->
-  <div id="modal" class="hidden fixed inset-0 bg-brand-black/75 z-50 flex items-center justify-center p-4">
-    <div class="bg-brand-dark border border-brand-brown rounded-2xl w-full max-w-lg p-7">
-
-      <div class="flex items-center justify-between mb-6">
-        <h3 id="modal-title" class="text-brand-cream text-sm font-semibold">Novo Usuário</h3>
-        <button onclick="closeModal()" class="text-brand-tan hover:text-brand-cream transition-colors">
-          <i data-lucide="x" class="w-4 h-4"></i>
-        </button>
-      </div>
-
-      <form id="form-usuario" class="flex flex-col gap-4">
-        <input type="hidden" id="f-id">
-
-        <div class="grid grid-cols-2 gap-3">
-          <div class="col-span-2">
-            <label class="block text-xs font-medium text-brand-tan mb-1.5">Nome *</label>
-            <input type="text" id="f-nome" required
-              class="w-full bg-brand-black border border-brand-brown rounded-lg px-3 py-2.5
-                     text-sm text-brand-cream placeholder-brand-tan
-                     focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-brand-tan mb-1.5">E-mail *</label>
-            <input type="email" id="f-email" required
-              class="w-full bg-brand-black border border-brand-brown rounded-lg px-3 py-2.5
-                     text-sm text-brand-cream placeholder-brand-tan
-                     focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-brand-tan mb-1.5" id="label-senha">Senha *</label>
-            <input type="password" id="f-senha"
-              class="w-full bg-brand-black border border-brand-brown rounded-lg px-3 py-2.5
-                     text-sm text-brand-cream placeholder-brand-tan
-                     focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors">
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-medium text-brand-tan mb-1.5">Perfil *</label>
-          <select id="f-perfil" required onchange="onPerfilChange()"
-            class="w-full bg-brand-black border border-brand-brown rounded-lg px-3 py-2.5
-                   text-sm text-brand-cream
-                   focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors">
-            <option value="">Selecione…</option>
-            <option value="1">Admin</option>
-            <option value="2">Representante</option>
-            <option value="3">Comprador</option>
-          </select>
-        </div>
-
-        <!-- Campo extra: representante -->
-        <div id="field-comissao" class="hidden">
-          <label class="block text-xs font-medium text-brand-tan mb-1.5">Comissão (%)</label>
-          <input type="number" id="f-comissao" min="0" max="100" step="0.01" placeholder="0,00"
-            class="w-full bg-brand-black border border-brand-brown rounded-lg px-3 py-2.5
-                   text-sm text-brand-cream placeholder-brand-tan
-                   focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors">
-        </div>
-
-        <!-- Campo extra: comprador -->
-        <div id="field-empresa" class="hidden">
-          <label class="block text-xs font-medium text-brand-tan mb-1.5">Empresa *</label>
-          <select id="f-empresa"
-            class="w-full bg-brand-black border border-brand-brown rounded-lg px-3 py-2.5
-                   text-sm text-brand-cream
-                   focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors">
-            <option value="">Selecione…</option>
-          </select>
-        </div>
-
-        <div class="flex justify-end gap-3 mt-2 pt-2 border-t border-brand-brown">
-          <button type="button" onclick="closeModal()"
-            class="px-4 py-2 text-xs font-medium text-brand-tan border border-brand-brown
-                   rounded-lg hover:bg-brand-brown/30 transition-colors">
-            Cancelar
-          </button>
-          <button type="submit" id="btn-salvar"
-            class="px-4 py-2 text-xs font-semibold bg-brand-primary hover:bg-amber-700
-                   text-white rounded-lg transition-colors">
-            Salvar
-          </button>
-        </div>
-      </form>
-
-    </div>
-  </div>
-
   <script src="/js/api.js"></script>
   <script src="/js/layout.js"></script>
+  <script src="/js/modal.js"></script>
   <script src="/js/pages/usuarios.js"></script>
   <script>Layout('Usuários');</script>
 </body>

@@ -5,6 +5,7 @@ const NAV = {
     { label: 'Usuários',    href: '/pages/usuarios.html',    icon: 'users' },
     { label: 'Empresas',    href: '/pages/empresas.html',    icon: 'building-2' },
     { label: 'Produtos',    href: '/pages/produtos.html',    icon: 'package' },
+    { label: 'Preços',      href: '/pages/precos.html',      icon: 'tags' },
     { label: 'Estoque',     href: '/pages/estoque.html',     icon: 'warehouse' },
     { label: 'Pedidos',     href: '/pages/pedidos.html',     icon: 'file-text' },
     { label: 'Aprovação',   href: '/pages/aprovacao.html',   icon: 'shield-check' },

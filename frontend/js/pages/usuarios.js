@@ -1,3 +1,56 @@
+// ── Modal ─────────────────────────────────────────────────────────
+Modal.build('modal-usuario', {
+  title: 'Novo Usuário',
+  width: 'max-w-lg',
+  content: `
+    <form id="form-usuario" class="flex flex-col gap-4">
+      <input type="hidden" id="f-id">
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="col-span-2">
+          <label class="${Modal.LABEL}">Nome *</label>
+          <input type="text" id="f-nome" required class="${Modal.INPUT}">
+        </div>
+        <div>
+          <label class="${Modal.LABEL}">E-mail *</label>
+          <input type="email" id="f-email" required class="${Modal.INPUT}">
+        </div>
+        <div>
+          <label id="label-senha" class="${Modal.LABEL}">Senha *</label>
+          <input type="password" id="f-senha" class="${Modal.INPUT}">
+        </div>
+      </div>
+
+      <div>
+        <label class="${Modal.LABEL}">Perfil *</label>
+        <select id="f-perfil" required onchange="onPerfilChange()" class="${Modal.SELECT}">
+          <option value="">Selecione…</option>
+          <option value="1">Admin</option>
+          <option value="2">Representante</option>
+          <option value="3">Comprador</option>
+        </select>
+      </div>
+
+      <div id="field-comissao" class="hidden">
+        <label class="${Modal.LABEL}">Comissão (%)</label>
+        <input type="number" id="f-comissao" min="0" max="100" step="0.01" placeholder="0,00" class="${Modal.INPUT}">
+      </div>
+
+      <div id="field-empresa" class="hidden">
+        <label class="${Modal.LABEL}">Empresa *</label>
+        <select id="f-empresa" class="${Modal.SELECT}">
+          <option value="">Selecione…</option>
+        </select>
+      </div>
+
+      <div class="flex justify-end gap-3 mt-2 pt-2 ${Modal.DIVIDER}">
+        <button type="button" onclick="closeModal()" class="${Modal.BTN_CANCEL}">Cancelar</button>
+        <button type="submit" id="btn-salvar" class="${Modal.BTN_PRIMARY}">Salvar</button>
+      </div>
+    </form>`,
+});
+
+// ── Estado ────────────────────────────────────────────────────────
 let _usuarios = [];
 let _empresas  = [];
 
@@ -7,6 +60,50 @@ const PERFIL_BADGE = {
   comprador:      'bg-emerald-900/60 text-emerald-300',
 };
 
+// ── Submit ────────────────────────────────────────────────────────
+document.getElementById('form-usuario').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const id     = document.getElementById('f-id').value;
+  const btn    = document.getElementById('btn-salvar');
+  const perfil = document.getElementById('f-perfil').value;
+
+  const body = {
+    perfil_id: parseInt(perfil),
+    nome:      document.getElementById('f-nome').value.trim(),
+    email:     document.getElementById('f-email').value.trim(),
+    senha:     document.getElementById('f-senha').value || undefined,
+  };
+
+  if (perfil === '2') {
+    body.percentual_comissao = parseFloat(document.getElementById('f-comissao').value) || 0;
+  }
+  if (perfil === '3') {
+    body.cliente_id = parseInt(document.getElementById('f-empresa').value) || undefined;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Salvando…';
+
+  try {
+    if (id) {
+      await Api.put(`/usuarios/${id}`, body);
+      showAlert('Usuário atualizado com sucesso.', 'success');
+    } else {
+      await Api.post('/usuarios', body);
+      showAlert('Usuário cadastrado com sucesso.', 'success');
+    }
+    closeModal();
+    _usuarios = await Api.get('/usuarios');
+    renderTabela();
+  } catch (err) {
+    showAlert(err.erro ?? 'Erro ao salvar usuário.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Salvar';
+  }
+});
+
+// ── Inicialização ────────────────────────────────────────────────
 async function init() {
   try {
     const [usuarios, empresas] = await Promise.all([
@@ -26,6 +123,7 @@ async function init() {
   }
 }
 
+// ── Tabela ────────────────────────────────────────────────────────
 function renderTabela() {
   const tbody = document.getElementById('tbody');
 
@@ -79,10 +177,11 @@ function renderTabela() {
   if (window.lucide) lucide.createIcons();
 }
 
+// ── Abrir / fechar modal ──────────────────────────────────────────
 function openModal(id = null) {
   const u = id ? _usuarios.find(x => x.id === id) : null;
 
-  document.getElementById('modal-title').textContent = u ? 'Editar Usuário' : 'Novo Usuário';
+  document.getElementById('modal-usuario-title').textContent = u ? 'Editar Usuário' : 'Novo Usuário';
   document.getElementById('f-id').value     = u?.id ?? '';
   document.getElementById('f-nome').value   = u?.nome ?? '';
   document.getElementById('f-email').value  = u?.email ?? '';
@@ -105,11 +204,11 @@ function openModal(id = null) {
   document.getElementById('f-empresa').value  = u?.comprador?.cliente_id ?? '';
 
   onPerfilChange();
-  document.getElementById('modal').classList.remove('hidden');
+  Modal.open('modal-usuario');
 }
 
 function closeModal() {
-  document.getElementById('modal').classList.add('hidden');
+  Modal.close('modal-usuario');
   document.getElementById('form-usuario').reset();
   onPerfilChange();
 }
@@ -120,48 +219,7 @@ function onPerfilChange() {
   document.getElementById('field-empresa').classList.toggle('hidden', perfil !== '3');
 }
 
-document.getElementById('form-usuario').addEventListener('submit', async (ev) => {
-  ev.preventDefault();
-  const id  = document.getElementById('f-id').value;
-  const btn = document.getElementById('btn-salvar');
-  const perfil = document.getElementById('f-perfil').value;
-
-  const body = {
-    perfil_id: parseInt(perfil),
-    nome:      document.getElementById('f-nome').value.trim(),
-    email:     document.getElementById('f-email').value.trim(),
-    senha:     document.getElementById('f-senha').value || undefined,
-  };
-
-  if (perfil === '2') {
-    body.percentual_comissao = parseFloat(document.getElementById('f-comissao').value) || 0;
-  }
-  if (perfil === '3') {
-    body.cliente_id = parseInt(document.getElementById('f-empresa').value) || undefined;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Salvando…';
-
-  try {
-    if (id) {
-      await Api.put(`/usuarios/${id}`, body);
-      showAlert('Usuário atualizado com sucesso.', 'success');
-    } else {
-      await Api.post('/usuarios', body);
-      showAlert('Usuário cadastrado com sucesso.', 'success');
-    }
-    closeModal();
-    _usuarios = await Api.get('/usuarios');
-    renderTabela();
-  } catch (err) {
-    showAlert(err.erro ?? 'Erro ao salvar usuário.', 'error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Salvar';
-  }
-});
-
+// ── Excluir ───────────────────────────────────────────────────────
 async function excluir(id) {
   const u = _usuarios.find(x => x.id === id);
   if (!confirm(`Excluir "${u?.nome}"?\nEsta ação não pode ser desfeita.`)) return;
@@ -176,6 +234,7 @@ async function excluir(id) {
   }
 }
 
+// ── Alert ─────────────────────────────────────────────────────────
 function showAlert(msg, type) {
   const cls = type === 'success'
     ? 'bg-green-950 border border-green-800 text-green-300'
@@ -185,4 +244,5 @@ function showAlert(msg, type) {
   setTimeout(() => { el.innerHTML = ''; }, 4000);
 }
 
+// ── Boot ──────────────────────────────────────────────────────────
 init();
