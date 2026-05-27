@@ -82,7 +82,6 @@ class ProdutoController
             'sku'        => $body['sku'],
             'cor'        => $body['cor'] ?? null,
             'tamanho'    => $body['tamanho'] ?? null,
-            'voltagem'   => $body['voltagem'] ?? null,
         ]);
 
         json($grade->toArray(), 201);
@@ -111,10 +110,32 @@ class ProdutoController
 
         $tabela = TabelaPreco::create([
             'nome'                => $body['nome'],
+            'regiao'              => $body['regiao'] ?? null,
             'regra_volume_minimo' => $body['regra_volume_minimo'] ?? 1,
         ]);
 
         json($tabela->toArray(), 201);
+    }
+
+    public function updateTabela(array $params): void
+    {
+        $tabela = TabelaPreco::find($params['tid']);
+        if (!$tabela) json(['erro' => 'Tabela de preço não encontrada'], 404);
+
+        $body = bodyParams();
+        $tabela->fill(array_intersect_key($body, array_flip(['nome', 'regiao', 'regra_volume_minimo'])));
+        $tabela->save();
+
+        json($tabela->toArray());
+    }
+
+    public function destroyTabela(array $params): void
+    {
+        $tabela = TabelaPreco::find($params['tid']);
+        if (!$tabela) json(['erro' => 'Tabela de preço não encontrada'], 404);
+
+        $tabela->delete();
+        json(['mensagem' => 'Tabela de preço removida com sucesso']);
     }
 
     // ---- Preços ----
@@ -142,5 +163,14 @@ class ProdutoController
         );
 
         json($preco->toArray(), 201);
+    }
+
+    public function destroyPreco(array $params): void
+    {
+        $preco = ProdutoPreco::where('produto_id', $params['id'])->find($params['pid']);
+        if (!$preco) json(['erro' => 'Preço não encontrado'], 404);
+
+        $preco->delete();
+        json(['mensagem' => 'Preço removido com sucesso']);
     }
 }

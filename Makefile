@@ -24,6 +24,7 @@ db-reset:
 
 seed:
 	docker exec ecommerce-trab-backend-1 php /var/www/html/cli/seed.php
+	docker exec ecommerce-trab-backend-1 php /var/www/html/cli/seed-produtos.php
 
 test:
 	docker exec ecommerce-trab-backend-1 php /var/www/html/cli/test-api.php --base-url=http://localhost/api

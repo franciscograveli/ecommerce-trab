@@ -73,7 +73,7 @@ CREATE TABLE grades (
     sku VARCHAR(50) UNIQUE NOT NULL,
     cor VARCHAR(50),
     tamanho VARCHAR(50),
-    voltagem VARCHAR(20),
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE
@@ -82,6 +82,7 @@ CREATE TABLE grades (
 CREATE TABLE tabelas_precos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
+    regiao VARCHAR(100) NULL,
     regra_volume_minimo INT DEFAULT 1
 );
 

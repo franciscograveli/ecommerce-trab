@@ -8,7 +8,7 @@ class Grade extends Model
 {
     protected $table = 'grades';
 
-    protected $fillable = ['produto_id', 'sku', 'cor', 'tamanho', 'voltagem'];
+    protected $fillable = ['produto_id', 'sku', 'cor', 'tamanho'];
 
     public function produto()
     {
