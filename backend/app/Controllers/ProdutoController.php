@@ -82,7 +82,6 @@ class ProdutoController
             'sku'        => $body['sku'],
             'cor'        => $body['cor'] ?? null,
             'tamanho'    => $body['tamanho'] ?? null,
-            'voltagem'   => $body['voltagem'] ?? null,
         ]);
 
         json($grade->toArray(), 201);

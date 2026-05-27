@@ -42,10 +42,6 @@ Modal.build('modal-grades', {
           <label class="${Modal.LABEL}">Tamanho</label>
           <input type="text" id="g-tamanho" placeholder="ex.: P / M / G" class="${Modal.INPUT}">
         </div>
-        <div>
-          <label class="${Modal.LABEL}">Voltagem</label>
-          <input type="text" id="g-voltagem" placeholder="ex.: 110V / 220V" class="${Modal.INPUT}">
-        </div>
       </div>
       <div class="flex justify-end mt-4">
         <button type="submit" id="btn-add-grade" class="${Modal.BTN_PRIMARY}">Adicionar Grade</button>
@@ -299,7 +295,7 @@ async function renderGrades() {
     }
 
     lista.innerHTML = grades.map(g => {
-      const detalhes = [g.cor, g.tamanho, g.voltagem].filter(Boolean).join(' · ');
+      const detalhes = [g.cor, g.tamanho].filter(Boolean).join(' · ');
       return `
         <div class="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-lg px-3 py-2.5">
           <div>
@@ -326,7 +322,6 @@ document.getElementById('form-grade').addEventListener('submit', async (ev) => {
     sku:      document.getElementById('g-sku').value.trim(),
     cor:      document.getElementById('g-cor').value.trim() || null,
     tamanho:  document.getElementById('g-tamanho').value.trim() || null,
-    voltagem: document.getElementById('g-voltagem').value.trim() || null,
   };
 
   btn.disabled = true;

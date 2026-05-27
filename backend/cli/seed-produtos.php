@@ -41,7 +41,10 @@ $defProdutos = [
     [
         'nome'      => 'Glenfarclas 12 Anos Single Malt Scotch Whisky 700ml',
         'descricao' => 'Single Malt Scotch Whisky da destilaria familiar Glenfarclas, Speyside, Escócia. Maturado exclusivamente em barris de Oloroso Sherry de Jerez. Notas de frutas secas, passas, mel e baunilha com leve toque defumado. ABV 43%, 700ml.',
-        'grades'    => [['sku' => 'GFC-12-700']],
+        'grades'    => [
+            ['sku' => 'GFC-12-700',  'tamanho' => '700ml'],
+            ['sku' => 'GFC-12-1000', 'tamanho' => '1000ml'],
+        ],
         'precos'    => ['Varejo' => 389.90],
     ],
     [
@@ -118,9 +121,8 @@ foreach ($defProdutos as $p) {
             DB::table('grades')->insert([
                 'produto_id' => $produtoId,
                 'sku'        => $g['sku'],
-                'cor'        => null,
-                'tamanho'    => null,
-                'voltagem'   => null,
+                'cor'        => $g['cor'] ?? null,
+                'tamanho'    => $g['tamanho'] ?? null,
             ]);
             echo "    ✅ Grade '{$g['sku']}'\n";
         } else {
