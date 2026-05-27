@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Produtos — B2B Atacado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="/js/tw-config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body class="bg-brand-black font-sans">
+
+  <div id="sidebar"></div>
+  <div id="topbar"></div>
+
+  <main id="main" class="p-6 bg-brand-black">
+
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-brand-cream text-lg font-semibold">Produtos</h2>
+        <p class="text-brand-tan text-xs mt-0.5">Catálogo de produtos, grades e preços</p>
+      </div>
+      <button onclick="openModalProduto()"
+        class="flex items-center gap-2 bg-brand-primary hover:bg-amber-700 text-white
+               text-xs font-semibold px-4 py-2 rounded-lg transition-colors">
+        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+        Novo Produto
+      </button>
+    </div>
+
+    <div id="alert" class="mb-4"></div>
+
+    <div class="bg-brand-dark border border-brand-brown rounded-xl overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="border-b border-brand-brown">
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Nome</th>
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Descrição</th>
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Grades</th>
+              <th class="px-5 py-3"></th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr>
+              <td colspan="4" class="px-5 py-10 text-center text-brand-tan">Carregando…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal: Criar / Editar Produto -->
+  <div id="modal-produto" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div class="bg-white border border-brand-primary/30 rounded-2xl w-full max-w-md p-7 shadow-xl">
+
+      <div class="flex items-center justify-between mb-6">
+        <h3 id="modal-produto-title" class="text-gray-900 text-sm font-semibold">Novo Produto</h3>
+        <button onclick="closeModalProduto()" class="text-gray-400 hover:text-gray-600 transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form id="form-produto" class="flex flex-col gap-4">
+        <input type="hidden" id="f-id">
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1.5">Nome *</label>
+          <input type="text" id="f-nome" required
+            class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5
+                   text-sm text-gray-900 placeholder-gray-400
+                   focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1.5">Descrição</label>
+          <textarea id="f-descricao" rows="3"
+            class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5
+                   text-sm text-gray-900 placeholder-gray-400 resize-none
+                   focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-2 pt-2 border-t border-gray-100">
+          <button type="button" onclick="closeModalProduto()"
+            class="px-4 py-2 text-xs font-medium text-gray-600 border border-gray-200
+                   rounded-lg hover:bg-gray-50 transition-colors">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-salvar-produto"
+            class="px-4 py-2 text-xs font-semibold bg-brand-primary hover:bg-amber-700
+                   text-white rounded-lg transition-colors">
+            Salvar
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Modal: Grades -->
+  <div id="modal-grades" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div class="bg-white border border-brand-primary/30 rounded-2xl w-full max-w-xl p-7 shadow-xl">
+
+      <div class="flex items-center justify-between mb-5">
+        <h3 id="modal-grades-title" class="text-gray-900 text-sm font-semibold">Grades</h3>
+        <button onclick="closeModalGrades()" class="text-gray-400 hover:text-gray-600 transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div id="alert-grades" class="mb-3"></div>
+
+      <!-- Lista de grades existentes -->
+      <div id="lista-grades" class="mb-5 space-y-2 max-h-52 overflow-y-auto"></div>
+
+      <!-- Formulário para adicionar grade -->
+      <form id="form-grade" class="border-t border-gray-100 pt-4">
+        <p class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-3">Adicionar Grade</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1.5">SKU *</label>
+            <input type="text" id="g-sku" required placeholder="ex.: PROD-001-AZ-P"
+              class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2
+                     text-sm text-gray-900 placeholder-gray-400
+                     focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1.5">Cor</label>
+            <input type="text" id="g-cor" placeholder="ex.: Azul"
+              class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2
+                     text-sm text-gray-900 placeholder-gray-400
+                     focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1.5">Tamanho</label>
+            <input type="text" id="g-tamanho" placeholder="ex.: P / M / G"
+              class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2
+                     text-sm text-gray-900 placeholder-gray-400
+                     focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1.5">Voltagem</label>
+            <input type="text" id="g-voltagem" placeholder="ex.: 110V / 220V"
+              class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2
+                     text-sm text-gray-900 placeholder-gray-400
+                     focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors">
+          </div>
+        </div>
+        <div class="flex justify-end mt-4">
+          <button type="submit" id="btn-add-grade"
+            class="px-4 py-2 text-xs font-semibold bg-brand-primary hover:bg-amber-700
+                   text-white rounded-lg transition-colors">
+            Adicionar Grade
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Modal: Preços -->
+  <div id="modal-precos" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div class="bg-white border border-brand-primary/30 rounded-2xl w-full max-w-xl p-7 shadow-xl">
+
+      <div class="flex items-center justify-between mb-5">
+        <h3 id="modal-precos-title" class="text-gray-900 text-sm font-semibold">Preços</h3>
+        <button onclick="closeModalPrecos()" class="text-gray-400 hover:text-gray-600 transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div id="alert-precos" class="mb-3"></div>
+
+      <!-- Preços atuais -->
+      <div id="lista-precos" class="mb-5 space-y-2 max-h-48 overflow-y-auto"></div>
+
+      <!-- Formulário para definir preço -->
+      <form id="form-preco" class="border-t border-gray-100 pt-4">
+        <p class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-3">Definir / Atualizar Preço</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1.5">Tabela de Preço *</label>
+            <select id="p-tabela"
+              class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2
+                     text-sm text-gray-900
+                     focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors">
+              <option value="">Selecione…</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1.5">Preço (R$) *</label>
+            <input type="number" id="p-preco" min="0" step="0.01" placeholder="0,00"
+              class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2
+                     text-sm text-gray-900 placeholder-gray-400
+                     focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-colors">
+          </div>
+        </div>
+        <div class="flex justify-end mt-4">
+          <button type="submit" id="btn-salvar-preco"
+            class="px-4 py-2 text-xs font-semibold bg-brand-primary hover:bg-amber-700
+                   text-white rounded-lg transition-colors">
+            Salvar Preço
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/pages/produtos.js"></script>
+  <script>Layout('Produtos');</script>
+</body>
+</html>
