@@ -109,6 +109,16 @@ $tokenComp = $rComp['body']['token'] ?? null;
 
 check('Rota protegida sem token → 401', 401, request('GET', '/usuarios'));
 
+// fix #42 — login deve retornar dados do perfil específico
+check('[#42] Login rep retorna representante.id', 200, $rRep,
+    fn($b) => isset($b['representante']['id']));
+check('[#42] Login comprador retorna comprador.id e cliente_id', 200, $rComp,
+    fn($b) => isset($b['comprador']['id']) && isset($b['comprador']['cliente_id']));
+check('[#42] Login admin não retorna representante nem comprador', 200, $rAdmin,
+    fn($b) => !isset($b['representante']) && !isset($b['comprador']));
+$repId   = $rRep['body']['representante']['id']   ?? null;
+$clienteIdDoComprador = $rComp['body']['comprador']['cliente_id'] ?? null;
+
 if (!$tokenAdmin || !$tokenRep || !$tokenComp) {
     echo "\n\033[31mNão foi possível obter tokens. Verifique se o seed foi executado.\033[0m\n";
     exit(1);
@@ -161,6 +171,12 @@ check('GET /usuarios/:id → 200', 200,
 check('PUT /usuarios/:id → 200', 200,
     request('PUT', "/usuarios/$novoUserId", ['nome' => 'Rep CLI Atualizado'], $tokenAdmin),
     fn($b) => $b['nome'] === 'Rep CLI Atualizado');
+
+// fix #43 — update deve persistir percentual_comissao na tabela representantes
+check('[#43] PUT percentual_comissao persiste no representante', 200,
+    request('PUT', "/usuarios/$novoUserId", ['percentual_comissao' => 12.5], $tokenAdmin),
+    fn($b) => isset($b['representante']['percentual_comissao'])
+           && (float)$b['representante']['percentual_comissao'] === 12.5);
 
 check('DELETE /usuarios/:id → 200', 200,
     request('DELETE', "/usuarios/$novoUserId", [], $tokenAdmin));
@@ -302,6 +318,53 @@ $pedidoId = $novoPedido['body']['id'] ?? null;
 
 check('GET /pedidos → 200', 200, request('GET', '/pedidos', [], $tokenComp));
 check('GET /pedidos/:id → 200', 200, request('GET', "/pedidos/$pedidoId", [], $tokenAdmin));
+
+// fix #44 — representante só vê pedidos de clientes da sua carteira
+// $repId vem do login (#42), então o teste é auto-suficiente
+
+// cria empresa vinculada ao rep e um pedido para ela
+$ts = substr(time(), -3);
+$cnpjNaCarteira = "44.$ts.444/0001-44";
+$empresaNaCarteira = request('POST', '/empresas', [
+    'razao_social'    => 'Empresa Na Carteira',
+    'cnpj'            => $cnpjNaCarteira,
+    'limite_credito'  => 10000.00,
+    'representante_id'=> $repId,
+], $tokenAdmin);
+$empresaNaCarteiraId = $empresaNaCarteira['body']['id'] ?? null;
+
+$pedidoNaCarteira = request('POST', '/pedidos', [
+    'cliente_id'   => $empresaNaCarteiraId,
+    'comprador_id' => 1,
+], $tokenRep);
+$pedidoNaCarteiraId = $pedidoNaCarteira['body']['id'] ?? null;
+
+// cria empresa SEM representante e um pedido para ela
+$cnpjForaCarteira = "55.$ts.555/0001-55";
+$empresaForaCarteira = request('POST', '/empresas', [
+    'razao_social'   => 'Empresa Fora Carteira',
+    'cnpj'           => $cnpjForaCarteira,
+    'limite_credito' => 5000.00,
+], $tokenAdmin);
+$empresaForaCarteiraId = $empresaForaCarteira['body']['id'] ?? null;
+
+$pedidoForaCarteira = request('POST', '/pedidos', [
+    'cliente_id'   => $empresaForaCarteiraId,
+    'comprador_id' => 1,
+], $tokenRep);
+$pedidoForaId = $pedidoForaCarteira['body']['id'] ?? null;
+
+$pedidosRepFinal   = request('GET', '/pedidos', [], $tokenRep);
+$pedidosAdminFinal = request('GET', '/pedidos', [], $tokenAdmin);
+
+check('[#44] Rep vê pedido da sua carteira', 200, $pedidosRepFinal,
+    fn($b) => is_array($b) && in_array($pedidoNaCarteiraId, array_column($b, 'id')));
+
+check('[#44] Rep não vê pedido fora da sua carteira', 200, $pedidosRepFinal,
+    fn($b) => is_array($b) && !in_array($pedidoForaId, array_column($b, 'id')));
+
+check('[#44] Admin vê todos os pedidos (inclui o fora da carteira)', 200, $pedidosAdminFinal,
+    fn($b) => is_array($b) && in_array($pedidoForaId, array_column($b, 'id')));
 
 $novoItem = request('POST', "/pedidos/$pedidoId/itens", [
     'grade_id' => $gradeId, 'quantidade' => 5, 'preco_unitario' => 49.90,
