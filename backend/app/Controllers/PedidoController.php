@@ -8,6 +8,7 @@ use App\Models\Grade;
 use App\Models\Cliente;
 use App\Models\Estoque;
 use App\Models\Representante;
+use App\Models\Perfil;
 use App\Middleware\Auth;
 
 class PedidoController
@@ -18,7 +19,7 @@ class PedidoController
 
         $query = Pedido::with(['cliente', 'comprador.usuario', 'representante.usuario', 'itens.grade']);
 
-        if ($usuario['perfil'] === 'representante') {
+        if (($usuario['perfil']['nome'] ?? null) === Perfil::REPRESENTANTE) {
             $repId = Representante::where('usuario_id', $usuario['id'])->value('id');
             $query->whereHas('cliente', fn($q) => $q->where('representante_id', $repId));
         }

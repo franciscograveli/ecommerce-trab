@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\Usuario;
 use App\Models\Representante;
 use App\Models\Comprador;
+use App\Models\Perfil;
 use App\Middleware\Auth;
 
 class UsuarioController
@@ -43,14 +44,14 @@ class UsuarioController
 
         $perfil = $usuario->perfil()->first();
 
-        if ($perfil && $perfil->nome === 'representante') {
+        if ($perfil && $perfil->nome === Perfil::REPRESENTANTE) {
             Representante::create([
                 'usuario_id'          => $usuario->id,
                 'percentual_comissao' => $body['percentual_comissao'] ?? 0.00,
             ]);
         }
 
-        if ($perfil && $perfil->nome === 'comprador') {
+        if ($perfil && $perfil->nome === Perfil::COMPRADOR) {
             if (empty($body['cliente_id'])) {
                 json(['erro' => "Campo 'cliente_id' é obrigatório para compradores"], 422);
             }

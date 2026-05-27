@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\Usuario;
 use App\Models\Token;
+use App\Models\Perfil;
 use App\Middleware\Auth;
 
 class AuthController
@@ -33,9 +34,9 @@ class AuthController
         $perfil = $usuario->perfil->nome ?? null;
 
         $dadosPerfil = [];
-        if ($perfil === 'representante' && $usuario->representante) {
+        if ($perfil === Perfil::REPRESENTANTE && $usuario->representante) {
             $dadosPerfil['representante'] = ['id' => $usuario->representante->id];
-        } elseif ($perfil === 'comprador' && $usuario->comprador) {
+        } elseif ($perfil === Perfil::COMPRADOR && $usuario->comprador) {
             $dadosPerfil['comprador'] = [
                 'id'         => $usuario->comprador->id,
                 'cliente_id' => $usuario->comprador->cliente_id,
