@@ -11,13 +11,31 @@ class EmpresaController
 {
     public function index(array $params): void
     {
-        json(Cliente::with('representante.usuario')->get()->toArray());
+        $usuario = Auth::handle();
+        $query   = Cliente::with('representante.usuario');
+
+        if (($usuario['perfil']['nome'] ?? null) === Perfil::REPRESENTANTE) {
+            $repId = Representante::where('usuario_id', $usuario['id'])->value('id');
+            $query->where('representante_id', $repId);
+        }
+
+        json($query->get()->toArray());
     }
 
     public function show(array $params): void
     {
+        $usuario = Auth::handle();
         $cliente = Cliente::with(['representante.usuario', 'compradores.usuario'])->find($params['id']);
+
         if (!$cliente) json(['erro' => 'Empresa não encontrada'], 404);
+
+        if (($usuario['perfil']['nome'] ?? null) === Perfil::REPRESENTANTE) {
+            $repId = Representante::where('usuario_id', $usuario['id'])->value('id');
+            if ($cliente->representante_id !== $repId) {
+                json(['erro' => 'Empresa não pertence à sua carteira'], 403);
+            }
+        }
+
         json($cliente->toArray());
     }
 
