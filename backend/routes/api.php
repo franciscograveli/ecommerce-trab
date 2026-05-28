@@ -24,7 +24,7 @@ $router->put('/usuarios/{id}',    [UsuarioController::class, 'update'],  [$A]);
 $router->delete('/usuarios/{id}', [UsuarioController::class, 'destroy'], [$A]);
 
 $router->get('/empresas',         [EmpresaController::class, 'index'],   [$A, $R]);
-$router->post('/empresas',        [EmpresaController::class, 'store'],   [$A]);
+$router->post('/empresas',        [EmpresaController::class, 'store'],   [$A, $R]);
 $router->get('/empresas/{id}',    [EmpresaController::class, 'show'],    [$A, $R]);
 $router->put('/empresas/{id}',    [EmpresaController::class, 'update'],  [$A]);
 $router->delete('/empresas/{id}', [EmpresaController::class, 'destroy'], [$A]);
@@ -54,7 +54,7 @@ $router->put('/pedidos/{id}',    [PedidoController::class, 'update'], [$A, $R]);
 $router->delete('/pedidos/{id}', [PedidoController::class, 'cancel'], [$A, $R, $C]);
 
 $router->get('/pedidos/{id}/itens',          [PedidoController::class, 'indexItens'],  [$A, $R, $C]);
-$router->post('/pedidos/{id}/itens',         [PedidoController::class, 'storeItem'],   [$C]);
+$router->post('/pedidos/{id}/itens',         [PedidoController::class, 'storeItem'],   [$C, $R]);
 $router->delete('/pedidos/{id}/itens/{iid}', [PedidoController::class, 'destroyItem'], [$C, $R]);
 
 $router->get('/estoque',    [EstoqueController::class, 'index'],         [$A, $R]);

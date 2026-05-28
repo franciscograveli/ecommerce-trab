@@ -92,47 +92,45 @@
     };
 
     async function init() {
-      try {
-        const [pedidos, rmas, expedicoes] = await Promise.all([
-          Api.get('/pedidos'),
-          Api.get('/rma'),
-          Api.get('/expedicao'),
-        ]);
+      const [rPedidos, rRmas, rExpedicoes] = await Promise.allSettled([
+        Api.get('/pedidos'),
+        Api.get('/rma'),
+        Api.get('/expedicao'),
+      ]);
 
-        document.getElementById('stat-pedidos').textContent    = pedidos.length;
-        document.getElementById('stat-bloqueados').textContent = pedidos.filter(p => p.status === 'aguardando_aprovacao_credito').length;
-        document.getElementById('stat-expedicao').textContent  = expedicoes.filter(e => e.status_logistica !== 'em_transito').length;
-        document.getElementById('stat-rma').textContent        = rmas.filter(r => r.status === 'aberto').length;
+      const pedidos    = rPedidos.status    === 'fulfilled' ? rPedidos.value    : [];
+      const rmas       = rRmas.status       === 'fulfilled' ? rRmas.value       : [];
+      const expedicoes = rExpedicoes.status === 'fulfilled' ? rExpedicoes.value : [];
 
-        const recentes = pedidos.slice(0, 10);
-        const tbody = document.getElementById('tbody-pedidos');
+      document.getElementById('stat-pedidos').textContent    = pedidos.length;
+      document.getElementById('stat-bloqueados').textContent = pedidos.filter(p => p.status === 'aguardando_aprovacao_credito').length;
+      document.getElementById('stat-expedicao').textContent  = expedicoes.filter(e => e.status_logistica !== 'em_transito').length;
+      document.getElementById('stat-rma').textContent        = rmas.filter(r => r.status === 'aberto').length;
 
-        if (recentes.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-brand-tan">Nenhum pedido ainda.</td></tr>`;
-          return;
-        }
+      const recentes = pedidos.slice(0, 10);
+      const tbody = document.getElementById('tbody-pedidos');
 
-        tbody.innerHTML = recentes.map(p => {
-          const [label, cls] = STATUS_BADGE[p.status] || ['—', 'bg-brand-brown text-brand-tan'];
-          const empresa = p.cliente?.razao_social || '—';
-          const valor   = Number(p.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-          return `
-            <tr class="border-b border-brand-brown last:border-0 hover:bg-brand-brown/20 transition-colors">
-              <td class="px-6 py-3.5 text-brand-tan font-mono">#${p.id}</td>
-              <td class="px-6 py-3.5 text-brand-cream">${empresa}</td>
-              <td class="px-6 py-3.5 text-brand-cream font-medium">${valor}</td>
-              <td class="px-6 py-3.5">
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${cls}">
-                  ${label}
-                </span>
-              </td>
-            </tr>`;
-        }).join('');
-
-      } catch (err) {
-        document.getElementById('tbody-pedidos').innerHTML =
-          `<tr><td colspan="4" class="px-6 py-6 text-center text-red-400 text-xs">Erro ao carregar dados.</td></tr>`;
+      if (recentes.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-brand-tan">Nenhum pedido ainda.</td></tr>`;
+        return;
       }
+
+      tbody.innerHTML = recentes.map(p => {
+        const [label, cls] = STATUS_BADGE[p.status] || ['—', 'bg-brand-brown text-brand-tan'];
+        const empresa = p.cliente?.razao_social || '—';
+        const valor   = Number(p.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        return `
+          <tr class="border-b border-brand-brown last:border-0 hover:bg-brand-brown/20 transition-colors">
+            <td class="px-6 py-3.5 text-brand-tan font-mono">#${p.id}</td>
+            <td class="px-6 py-3.5 text-brand-cream">${empresa}</td>
+            <td class="px-6 py-3.5 text-brand-cream font-medium">${valor}</td>
+            <td class="px-6 py-3.5">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${cls}">
+                ${label}
+              </span>
+            </td>
+          </tr>`;
+      }).join('');
     }
 
     init();
