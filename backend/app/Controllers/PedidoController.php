@@ -8,6 +8,7 @@ use App\Models\Grade;
 use App\Models\Cliente;
 use App\Models\Estoque;
 use App\Models\Representante;
+use App\Models\Comissao;
 use App\Models\Perfil;
 use App\Middleware\Auth;
 
@@ -84,6 +85,7 @@ class PedidoController
 
             $this->validarEstoque($pedido);
             $this->decrementarEstoque($pedido);
+            $this->gerarComissao($pedido);
         }
 
         if (!empty($body['status'])) $pedido->status = $body['status'];
@@ -200,5 +202,20 @@ class PedidoController
                 $estoque->decrement('quantidade', $item->quantidade);
             }
         }
+    }
+
+    private function gerarComissao(Pedido $pedido): void
+    {
+        if (!$pedido->representante_id) return;
+
+        $rep = Representante::find($pedido->representante_id);
+        if (!$rep || !$rep->percentual_comissao) return;
+
+        Comissao::create([
+            'representante_id' => $rep->id,
+            'pedido_id'        => $pedido->id,
+            'valor'            => round($pedido->valor_total * $rep->percentual_comissao / 100, 2),
+            'status'           => 'pendente',
+        ]);
     }
 }
