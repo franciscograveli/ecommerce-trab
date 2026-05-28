@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\RmaSolicitacao;
 use App\Models\Pedido;
 use App\Models\Estoque;
+use App\Models\Perfil;
 use App\Middleware\Auth;
 
 class RmaController
@@ -28,7 +29,8 @@ class RmaController
 
     public function store(array $params): void
     {
-        $body = bodyParams();
+        $usuario = Auth::handle();
+        $body    = bodyParams();
 
         foreach (['pedido_id', 'comprador_id', 'tipo', 'motivo'] as $campo) {
             if (empty($body[$campo])) json(['erro' => "Campo '{$campo}' é obrigatório"], 422);
@@ -36,6 +38,10 @@ class RmaController
 
         if (!in_array($body['tipo'], ['troca', 'devolucao'])) {
             json(['erro' => "Tipo deve ser 'troca' ou 'devolucao'"], 422);
+        }
+
+        if (($usuario['perfil']['nome'] ?? null) === Perfil::COMPRADOR) {
+            $body['comprador_id'] = $usuario['comprador']['id'] ?? $body['comprador_id'];
         }
 
         $pedido = Pedido::find($body['pedido_id']);
@@ -62,10 +68,19 @@ class RmaController
         if (!$rma) json(['erro' => 'Solicitação RMA não encontrada'], 404);
 
         $body = bodyParams();
-        $statusValidos = ['aberto', 'em_analise', 'aprovado', 'rejeitado', 'concluido'];
 
-        if (!empty($body['status']) && !in_array($body['status'], $statusValidos)) {
-            json(['erro' => 'Status inválido'], 422);
+        $transicoes = [
+            'aberto'     => ['em_analise', 'rejeitado'],
+            'em_analise' => ['aprovado', 'rejeitado'],
+            'aprovado'   => ['concluido'],
+            'rejeitado'  => [],
+            'concluido'  => [],
+        ];
+
+        if (!empty($body['status'])) {
+            if (!isset($transicoes[$rma->status]) || !in_array($body['status'], $transicoes[$rma->status])) {
+                json(['erro' => "Transição de '{$rma->status}' para '{$body['status']}' não permitida"], 422);
+            }
         }
 
         $statusAnterior = $rma->status;

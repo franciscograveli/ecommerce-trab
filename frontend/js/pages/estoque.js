@@ -200,7 +200,7 @@ function renderTabela() {
 
   tbody.innerHTML = lista.map(e => {
     const produto  = e.grade?.produto?.nome ?? '—';
-    const volume   = e.grade?.volume ?? '—';
+    const volume   = e.grade?.tamanho ?? '—';
     const deposito = e.deposito?.nome ?? '—';
     const qtd      = e.quantidade ?? 0;
     const qtdCls   = qtd === 0 ? 'text-red-400' : qtd < 10 ? 'text-brand-amber' : 'text-brand-cream';
@@ -256,7 +256,7 @@ function openModalAjuste() {
 function openModalAjusteFixo(gradeId, depositoId) {
   const entry    = _estoque.find(e => e.grade_id === gradeId && e.deposito_id === depositoId);
   const produto  = entry?.grade?.produto?.nome ?? '';
-  const volume   = entry?.grade?.volume ?? '';
+  const volume   = entry?.grade?.tamanho ?? '';
   const deposito = entry?.deposito?.nome ?? '';
 
   document.getElementById('fields-livre').classList.add('hidden');

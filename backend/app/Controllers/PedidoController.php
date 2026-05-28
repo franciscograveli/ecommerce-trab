@@ -48,10 +48,21 @@ class PedidoController
 
     public function store(array $params): void
     {
-        $body = bodyParams();
+        $usuario = Auth::handle();
+        $body    = bodyParams();
+        $perfil  = $usuario['perfil']['nome'] ?? null;
 
         foreach (['cliente_id', 'comprador_id'] as $campo) {
             if (empty($body[$campo])) json(['erro' => "Campo '{$campo}' é obrigatório"], 422);
+        }
+
+        if ($perfil === Perfil::COMPRADOR) {
+            $body['comprador_id'] = $usuario['comprador']['id'] ?? $body['comprador_id'];
+        }
+
+        if ($perfil === Perfil::REPRESENTANTE) {
+            $repId = Representante::where('usuario_id', $usuario['id'])->value('id');
+            $body['representante_id'] = $repId;
         }
 
         $pedido = Pedido::create([
@@ -78,9 +89,13 @@ class PedidoController
         }
 
         if (!empty($body['status']) && $body['status'] === 'aprovado' && $pedido->status !== 'aprovado') {
-            $cliente = Cliente::find($pedido->cliente_id);
-            if ($cliente && $pedido->valor_total > $cliente->limite_credito) {
-                json(['erro' => 'Valor do pedido excede o limite de crédito do cliente'], 422);
+            if ($pedido->status === 'orcamento') {
+                $cliente = Cliente::find($pedido->cliente_id);
+                if ($cliente && $pedido->valor_total > $cliente->limite_credito) {
+                    $pedido->status = 'aguardando_aprovacao_credito';
+                    $pedido->save();
+                    json($pedido->toArray());
+                }
             }
 
             $this->validarEstoque($pedido);
@@ -130,6 +145,13 @@ class PedidoController
         $body = bodyParams();
         foreach (['grade_id', 'quantidade', 'preco_unitario'] as $campo) {
             if (!isset($body[$campo])) json(['erro' => "Campo '{$campo}' é obrigatório"], 422);
+        }
+
+        if ((int)$body['quantidade'] <= 0) {
+            json(['erro' => 'Quantidade deve ser maior que zero'], 422);
+        }
+        if ((float)$body['preco_unitario'] < 0) {
+            json(['erro' => 'Preço unitário não pode ser negativo'], 422);
         }
 
         if (!Grade::find($body['grade_id'])) json(['erro' => 'Grade não encontrada'], 404);

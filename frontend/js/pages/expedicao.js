@@ -262,6 +262,11 @@ async function emitirBoleto() {
     return;
   }
 
+  if (new Date(venc) <= new Date()) {
+    showAlert('Data de vencimento deve ser no futuro.', 'error');
+    return;
+  }
+
   try {
     await Api.post(`/expedicao/${id}/boleto`, {
       linha_digitavel: linha,
