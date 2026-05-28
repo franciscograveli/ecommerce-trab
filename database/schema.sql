@@ -172,7 +172,7 @@ CREATE TABLE rma_solicitacoes (
 CREATE TABLE comissoes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     representante_id INT NOT NULL,
-    pedido_id INT NOT NULL,
+    pedido_id INT UNIQUE NOT NULL,
     valor DECIMAL(10,2) NOT NULL,
     status ENUM('pendente', 'pago') DEFAULT 'pendente',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

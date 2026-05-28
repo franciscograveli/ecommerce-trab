@@ -77,7 +77,7 @@ class PedidoController
             json(['erro' => 'Status inválido'], 422);
         }
 
-        if (!empty($body['status']) && $body['status'] === 'aprovado') {
+        if (!empty($body['status']) && $body['status'] === 'aprovado' && $pedido->status !== 'aprovado') {
             $cliente = Cliente::find($pedido->cliente_id);
             if ($cliente && $pedido->valor_total > $cliente->limite_credito) {
                 json(['erro' => 'Valor do pedido excede o limite de crédito do cliente'], 422);
@@ -207,6 +207,7 @@ class PedidoController
     private function gerarComissao(Pedido $pedido): void
     {
         if (!$pedido->representante_id) return;
+        if (Comissao::where('pedido_id', $pedido->id)->exists()) return;
 
         $rep = Representante::find($pedido->representante_id);
         if (!$rep || !$rep->percentual_comissao) return;
