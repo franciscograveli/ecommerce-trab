@@ -169,11 +169,14 @@ CREATE TABLE rma_solicitacoes (
     FOREIGN KEY (comprador_id) REFERENCES compradores(id)
 );
 
-CREATE TABLE admins (
+CREATE TABLE comissoes (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    senha VARCHAR(255) NOT NULL,
+    representante_id INT NOT NULL,
+    pedido_id INT UNIQUE NOT NULL,
+    valor DECIMAL(10,2) NOT NULL,
+    status ENUM('pendente', 'pago') DEFAULT 'pendente',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (representante_id) REFERENCES representantes(id),
+    FOREIGN KEY (pedido_id) REFERENCES pedidos(id)
 );

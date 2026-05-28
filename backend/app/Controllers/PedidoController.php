@@ -8,6 +8,7 @@ use App\Models\Grade;
 use App\Models\Cliente;
 use App\Models\Estoque;
 use App\Models\Representante;
+use App\Models\Comissao;
 use App\Models\Perfil;
 use App\Middleware\Auth;
 
@@ -76,20 +77,15 @@ class PedidoController
             json(['erro' => 'Status inválido'], 422);
         }
 
-        if (!empty($body['status']) && $body['status'] === 'aprovado') {
-            // Vindo de 'orcamento': verifica crédito e auto-roteia se estourado
-            // Vindo de 'aguardando_aprovacao_credito': admin override, pula o check
-            if ($pedido->status === 'orcamento') {
-                $cliente = Cliente::find($pedido->cliente_id);
-                if ($cliente && $pedido->valor_total > $cliente->limite_credito) {
-                    $pedido->status = 'aguardando_aprovacao_credito';
-                    $pedido->save();
-                    json($pedido->toArray());
-                }
+        if (!empty($body['status']) && $body['status'] === 'aprovado' && $pedido->status !== 'aprovado') {
+            $cliente = Cliente::find($pedido->cliente_id);
+            if ($cliente && $pedido->valor_total > $cliente->limite_credito) {
+                json(['erro' => 'Valor do pedido excede o limite de crédito do cliente'], 422);
             }
 
             $this->validarEstoque($pedido);
             $this->decrementarEstoque($pedido);
+            $this->gerarComissao($pedido);
         }
 
         if (!empty($body['status'])) $pedido->status = $body['status'];
@@ -206,5 +202,21 @@ class PedidoController
                 $estoque->decrement('quantidade', $item->quantidade);
             }
         }
+    }
+
+    private function gerarComissao(Pedido $pedido): void
+    {
+        if (!$pedido->representante_id) return;
+        if (Comissao::where('pedido_id', $pedido->id)->exists()) return;
+
+        $rep = Representante::find($pedido->representante_id);
+        if (!$rep || !$rep->percentual_comissao) return;
+
+        Comissao::create([
+            'representante_id' => $rep->id,
+            'pedido_id'        => $pedido->id,
+            'valor'            => round($pedido->valor_total * $rep->percentual_comissao / 100, 2),
+            'status'           => 'pendente',
+        ]);
     }
 }
