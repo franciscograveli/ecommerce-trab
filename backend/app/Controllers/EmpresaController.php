@@ -3,6 +3,8 @@
 namespace App\Controllers;
 
 use App\Models\Cliente;
+use App\Models\Representante;
+use App\Models\Perfil;
 use App\Middleware\Auth;
 
 class EmpresaController
@@ -21,7 +23,8 @@ class EmpresaController
 
     public function store(array $params): void
     {
-        $body = bodyParams();
+        $usuario = Auth::handle();
+        $body    = bodyParams();
 
         foreach (['razao_social', 'cnpj'] as $campo) {
             if (empty($body[$campo])) json(['erro' => "Campo '{$campo}' é obrigatório"], 422);
@@ -29,6 +32,11 @@ class EmpresaController
 
         if (Cliente::where('cnpj', $body['cnpj'])->exists()) {
             json(['erro' => 'CNPJ já cadastrado'], 409);
+        }
+
+        if (($usuario['perfil']['nome'] ?? null) === Perfil::REPRESENTANTE) {
+            $repId = Representante::where('usuario_id', $usuario['id'])->value('id');
+            $body['representante_id'] = $repId;
         }
 
         $cliente = Cliente::create([

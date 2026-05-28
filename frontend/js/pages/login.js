@@ -19,7 +19,7 @@ form.addEventListener('submit', async (e) => {
 
     const perfil = (res.usuario.perfil?.nome ?? res.usuario.perfil ?? '').toLowerCase();
     window.location.href = perfil === 'comprador'
-      ? '/pages/portal-pedidos.html'
+      ? '/pages/pedidos.html'
       : '/pages/dashboard.html';
 
   } catch (err) {

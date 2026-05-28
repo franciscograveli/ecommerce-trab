@@ -18,9 +18,8 @@ const NAV = {
     { label: 'Pedidos',     href: '/pages/pedidos.html',     icon: 'file-text' },
   ],
   comprador: [
-    { label: 'Meus Pedidos', href: '/pages/portal-pedidos.html', icon: 'shopping-bag' },
-    { label: 'Boletos',      href: '/pages/portal-boletos.html', icon: 'receipt' },
-    { label: 'Devoluções',   href: '/pages/portal-rma.html',     icon: 'package-x' },
+    { label: 'Pedidos',    href: '/pages/pedidos.html', icon: 'file-text' },
+    { label: 'Devoluções', href: '/pages/rma.html',     icon: 'package-x' },
   ],
 };
 
