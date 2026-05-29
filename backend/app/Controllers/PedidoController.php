@@ -48,10 +48,35 @@ class PedidoController
 
     public function store(array $params): void
     {
-        $body = bodyParams();
+        $usuario = Auth::handle();
+        $body    = bodyParams();
+        $perfil  = $usuario['perfil']['nome'] ?? null;
+
+        // Força dados do token — impede impersonação de comprador ou empresa
+        if ($perfil === Perfil::COMPRADOR) {
+            $body['comprador_id'] = $usuario['comprador']['id'] ?? null;
+            $body['cliente_id']   = $usuario['comprador']['cliente_id'] ?? null;
+        }
+
+        if ($perfil === Perfil::REPRESENTANTE) {
+            $repId = Representante::where('usuario_id', $usuario['id'])->value('id');
+            $body['representante_id'] = $repId;
+
+            $pertenceCarteira = Cliente::where('id', $body['cliente_id'] ?? null)
+                ->where('representante_id', $repId)
+                ->exists();
+            if (!$pertenceCarteira) {
+                json(['erro' => 'Empresa não pertence à sua carteira'], 403);
+            }
+        }
 
         foreach (['cliente_id', 'comprador_id'] as $campo) {
             if (empty($body[$campo])) json(['erro' => "Campo '{$campo}' é obrigatório"], 422);
+        }
+
+        // Herda representante da empresa caso não esteja definido (ex: pedido criado por admin)
+        if (empty($body['representante_id'])) {
+            $body['representante_id'] = Cliente::where('id', $body['cliente_id'])->value('representante_id');
         }
 
         $pedido = Pedido::create([
@@ -78,9 +103,13 @@ class PedidoController
         }
 
         if (!empty($body['status']) && $body['status'] === 'aprovado' && $pedido->status !== 'aprovado') {
-            $cliente = Cliente::find($pedido->cliente_id);
-            if ($cliente && $pedido->valor_total > $cliente->limite_credito) {
-                json(['erro' => 'Valor do pedido excede o limite de crédito do cliente'], 422);
+            if ($pedido->status === 'orcamento') {
+                $cliente = Cliente::find($pedido->cliente_id);
+                if ($cliente && $pedido->valor_total > $cliente->limite_credito) {
+                    $pedido->status = 'aguardando_aprovacao_credito';
+                    $pedido->save();
+                    json($pedido->toArray());
+                }
             }
 
             $this->validarEstoque($pedido);
@@ -130,6 +159,13 @@ class PedidoController
         $body = bodyParams();
         foreach (['grade_id', 'quantidade', 'preco_unitario'] as $campo) {
             if (!isset($body[$campo])) json(['erro' => "Campo '{$campo}' é obrigatório"], 422);
+        }
+
+        if ((int)$body['quantidade'] <= 0) {
+            json(['erro' => 'Quantidade deve ser maior que zero'], 422);
+        }
+        if ((float)$body['preco_unitario'] < 0) {
+            json(['erro' => 'Preço unitário não pode ser negativo'], 422);
         }
 
         if (!Grade::find($body['grade_id'])) json(['erro' => 'Grade não encontrada'], 404);
@@ -192,14 +228,19 @@ class PedidoController
     private function decrementarEstoque(Pedido $pedido): void
     {
         foreach ($pedido->itens()->get() as $item) {
-            // Decrementa do primeiro depósito com saldo suficiente
-            $estoque = Estoque::where('grade_id', $item->grade_id)
-                ->where('quantidade', '>=', $item->quantidade)
-                ->orderBy('quantidade', 'desc')
-                ->first();
+            $restante = $item->quantidade;
 
-            if ($estoque) {
-                $estoque->decrement('quantidade', $item->quantidade);
+            // Consome dos depósitos em ordem decrescente de quantidade (FIFO por maior saldo)
+            $estoques = Estoque::where('grade_id', $item->grade_id)
+                ->where('quantidade', '>', 0)
+                ->orderBy('quantidade', 'desc')
+                ->get();
+
+            foreach ($estoques as $estoque) {
+                if ($restante <= 0) break;
+                $consumir = min($estoque->quantidade, $restante);
+                $estoque->decrement('quantidade', $consumir);
+                $restante -= $consumir;
             }
         }
     }

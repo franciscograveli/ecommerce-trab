@@ -193,13 +193,16 @@ document.getElementById('form-pedido').addEventListener('submit', async (ev) => 
   const btn = document.getElementById('btn-salvar-pedido');
   const clienteId = document.getElementById('f-empresa').value;
 
-  // Para comprador, usa o cliente_id do login; admin/rep usam o select
+  const resolvedClienteId = clienteId || _usuario.comprador?.cliente_id;
+  if (!resolvedClienteId) {
+    showAlert('Selecione uma empresa.', 'error');
+    return;
+  }
+
   const body = {
-    cliente_id:   clienteId || _usuario.comprador?.cliente_id,
+    cliente_id:   resolvedClienteId,
     comprador_id: _usuario.comprador?.id ?? 1,
   };
-
-  if (_usuario.representante) body.representante_id = _usuario.representante.id;
 
   btn.disabled = true;
   btn.textContent = 'Criando…';

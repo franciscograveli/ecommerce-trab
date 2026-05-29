@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\RmaSolicitacao;
 use App\Models\Pedido;
 use App\Models\Estoque;
+use App\Models\Perfil;
 use App\Middleware\Auth;
 
 class RmaController
@@ -28,7 +29,8 @@ class RmaController
 
     public function store(array $params): void
     {
-        $body = bodyParams();
+        $usuario = Auth::handle();
+        $body    = bodyParams();
 
         foreach (['pedido_id', 'comprador_id', 'tipo', 'motivo'] as $campo) {
             if (empty($body[$campo])) json(['erro' => "Campo '{$campo}' é obrigatório"], 422);
@@ -38,8 +40,18 @@ class RmaController
             json(['erro' => "Tipo deve ser 'troca' ou 'devolucao'"], 422);
         }
 
+        if (($usuario['perfil']['nome'] ?? null) === Perfil::COMPRADOR) {
+            $body['comprador_id'] = $usuario['comprador']['id'] ?? null;
+        }
+
         $pedido = Pedido::find($body['pedido_id']);
         if (!$pedido) json(['erro' => 'Pedido não encontrado'], 404);
+
+        if (($usuario['perfil']['nome'] ?? null) === Perfil::COMPRADOR) {
+            if ($pedido->cliente_id !== ($usuario['comprador']['cliente_id'] ?? null)) {
+                json(['erro' => 'Pedido não pertence à sua empresa'], 403);
+            }
+        }
 
         if (!in_array($pedido->status, ['enviado', 'entregue'])) {
             json(['erro' => 'RMA só pode ser aberto para pedidos enviados ou entregues'], 422);
@@ -62,10 +74,19 @@ class RmaController
         if (!$rma) json(['erro' => 'Solicitação RMA não encontrada'], 404);
 
         $body = bodyParams();
-        $statusValidos = ['aberto', 'em_analise', 'aprovado', 'rejeitado', 'concluido'];
 
-        if (!empty($body['status']) && !in_array($body['status'], $statusValidos)) {
-            json(['erro' => 'Status inválido'], 422);
+        $transicoes = [
+            'aberto'     => ['em_analise', 'rejeitado'],
+            'em_analise' => ['aprovado', 'rejeitado'],
+            'aprovado'   => ['concluido'],
+            'rejeitado'  => [],
+            'concluido'  => [],
+        ];
+
+        if (!empty($body['status'])) {
+            if (!isset($transicoes[$rma->status]) || !in_array($body['status'], $transicoes[$rma->status])) {
+                json(['erro' => "Transição de '{$rma->status}' para '{$body['status']}' não permitida"], 422);
+            }
         }
 
         $statusAnterior = $rma->status;
@@ -74,7 +95,7 @@ class RmaController
         $rma->save();
 
         // Devolução concluída: devolve itens ao estoque
-        if ($body['status'] === 'concluido' && $statusAnterior !== 'concluido' && $rma->tipo === 'devolucao') {
+        if ($rma->status === 'concluido' && $statusAnterior !== 'concluido' && $rma->tipo === 'devolucao') {
             $this->incrementarEstoque($rma);
         }
 
