@@ -62,7 +62,8 @@ document.getElementById('form-empresa').addEventListener('submit', async (ev) =>
   ev.preventDefault();
   const id  = document.getElementById('f-id').value;
   const btn = document.getElementById('btn-salvar');
-  const val = parseFloat(document.getElementById('f-limite').value) || 0;
+  const rawVal = document.getElementById('f-limite').value;
+  const val    = rawVal === '' ? null : (parseFloat(rawVal) || 0);
 
   const body = {
     razao_social:       document.getElementById('f-razao').value.trim(),
@@ -72,9 +73,10 @@ document.getElementById('form-empresa').addEventListener('submit', async (ev) =>
   };
 
   if (_isRep) {
-    body.limite_credito_proposto = val;
+    // Vazio ou zero não conta como proposta
+    body.limite_credito_proposto = val && val > 0 ? val : null;
   } else {
-    body.limite_credito = val;
+    body.limite_credito = val ?? 0;
   }
 
   btn.disabled = true;
@@ -218,7 +220,7 @@ function closeModal() {
 
 function usarProposta() {
   const id = document.getElementById('f-id').value;
-  const e  = _empresas.find(x => x.id === parseInt(id));
+  const e  = _empresas.find(x => x.id === Number(id));
   if (e?.limite_credito_proposto != null) {
     document.getElementById('f-limite').value = e.limite_credito_proposto;
   }
