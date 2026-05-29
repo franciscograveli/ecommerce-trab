@@ -24,7 +24,7 @@ Modal.build('modal-empresa', {
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="${Modal.LABEL}">Limite de Crédito (R$)</label>
+          <label id="f-limite-label" class="${Modal.LABEL}">Limite de Crédito (R$)</label>
           <input type="number" id="f-limite" min="0" step="0.01" placeholder="0,00" class="${Modal.INPUT}">
         </div>
         <div>
@@ -32,6 +32,17 @@ Modal.build('modal-empresa', {
           <select id="f-rep" class="${Modal.SELECT}">
             <option value="">Sem representante</option>
           </select>
+        </div>
+      </div>
+
+      <div id="row-proposta" class="hidden bg-yellow-950/60 border border-yellow-800/60 rounded-lg px-4 py-3">
+        <p class="text-yellow-300 text-[11px] font-semibold uppercase tracking-wider mb-1">Proposta do representante</p>
+        <div class="flex items-center justify-between">
+          <span id="val-proposta" class="text-yellow-200 text-xs font-mono"></span>
+          <button type="button" onclick="usarProposta()"
+            class="text-yellow-300 hover:text-yellow-100 text-[11px] font-medium transition-colors">
+            Usar este valor
+          </button>
         </div>
       </div>
 
@@ -44,20 +55,29 @@ Modal.build('modal-empresa', {
 
 // ── Estado ────────────────────────────────────────────────────────
 let _empresas = [];
+let _isRep    = false;
 
 // ── Submit ────────────────────────────────────────────────────────
 document.getElementById('form-empresa').addEventListener('submit', async (ev) => {
   ev.preventDefault();
   const id  = document.getElementById('f-id').value;
   const btn = document.getElementById('btn-salvar');
+  const rawVal = document.getElementById('f-limite').value;
+  const val    = rawVal === '' ? null : (parseFloat(rawVal) || 0);
 
   const body = {
     razao_social:       document.getElementById('f-razao').value.trim(),
     cnpj:               document.getElementById('f-cnpj').value.trim(),
     inscricao_estadual: document.getElementById('f-ie').value.trim() || null,
-    limite_credito:     parseFloat(document.getElementById('f-limite').value) || 0,
     representante_id:   document.getElementById('f-rep').value || null,
   };
+
+  if (_isRep) {
+    // Vazio ou zero não conta como proposta
+    body.limite_credito_proposto = val && val > 0 ? val : null;
+  } else {
+    body.limite_credito = val ?? 0;
+  }
 
   btn.disabled = true;
   btn.textContent = 'Salvando…';
@@ -85,18 +105,22 @@ document.getElementById('form-empresa').addEventListener('submit', async (ev) =>
 async function init() {
   const _usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
   const perfil   = (_usuario.perfil?.nome ?? _usuario.perfil ?? '').toLowerCase();
-  const isRep    = perfil === 'representante';
+  _isRep = perfil === 'representante';
+
+  if (_isRep) {
+    document.getElementById('f-limite-label').textContent = 'Limite Proposto (R$)';
+  }
 
   try {
     const [rEmpresa, rUsuarios] = await Promise.allSettled([
       Api.get('/empresas'),
-      isRep ? Promise.resolve([]) : Api.get('/usuarios'),
+      _isRep ? Promise.resolve([]) : Api.get('/usuarios'),
     ]);
 
     _empresas = rEmpresa.status === 'fulfilled' ? rEmpresa.value : [];
 
     const sel = document.getElementById('f-rep');
-    if (isRep) {
+    if (_isRep) {
       sel.innerHTML = `<option value="${_usuario.representante?.id ?? ''}">${_usuario.nome}</option>`;
       sel.disabled  = true;
     } else {
@@ -127,13 +151,18 @@ function renderTabela() {
   }
 
   tbody.innerHTML = _empresas.map(e => {
-    const rep    = e.representante?.usuario?.nome ?? '—';
-    const limite = Number(e.limite_credito).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const rep          = e.representante?.usuario?.nome ?? '—';
+    const temProposta  = e.limite_credito_proposto != null;
+    const valorExibido = temProposta ? e.limite_credito_proposto : e.limite_credito;
+    const limite       = Number(valorExibido).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const badge        = temProposta
+      ? `<span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-yellow-900/60 text-yellow-300" title="Proposta pendente de aprovação">proposta</span>`
+      : '';
     return `
       <tr class="border-b border-brand-brown last:border-0 hover:bg-brand-brown/20 transition-colors">
         <td class="px-5 py-3.5 text-brand-cream font-medium">${e.razao_social}</td>
         <td class="px-5 py-3.5 text-brand-tan font-mono">${e.cnpj}</td>
-        <td class="px-5 py-3.5 text-brand-cream">${limite}</td>
+        <td class="px-5 py-3.5 text-brand-cream">${limite}${badge}</td>
         <td class="px-5 py-3.5 text-brand-tan">${rep}</td>
         <td class="px-5 py-3.5">
           <div class="flex items-center justify-end gap-4">
@@ -158,12 +187,27 @@ function openModal(id = null) {
   const e = id ? _empresas.find(x => x.id === id) : null;
 
   document.getElementById('modal-empresa-title').textContent = e ? 'Editar Empresa' : 'Nova Empresa';
-  document.getElementById('f-id').value     = e?.id ?? '';
-  document.getElementById('f-razao').value  = e?.razao_social ?? '';
-  document.getElementById('f-cnpj').value   = e?.cnpj ?? '';
-  document.getElementById('f-ie').value     = e?.inscricao_estadual ?? '';
-  document.getElementById('f-limite').value = e?.limite_credito ?? '';
-  document.getElementById('f-rep').value    = e?.representante_id ?? '';
+  document.getElementById('f-id').value    = e?.id ?? '';
+  document.getElementById('f-razao').value = e?.razao_social ?? '';
+  document.getElementById('f-cnpj').value  = e?.cnpj ?? '';
+  document.getElementById('f-ie').value    = e?.inscricao_estadual ?? '';
+  document.getElementById('f-rep').value   = e?.representante_id ?? '';
+
+  if (_isRep) {
+    document.getElementById('f-limite').value = e?.limite_credito_proposto ?? '';
+    document.getElementById('row-proposta').classList.add('hidden');
+  } else {
+    document.getElementById('f-limite').value = e?.limite_credito ?? '';
+    const proposto = e?.limite_credito_proposto;
+    const rowProposta = document.getElementById('row-proposta');
+    if (proposto != null) {
+      const fmt = Number(proposto).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      document.getElementById('val-proposta').textContent = fmt;
+      rowProposta.classList.remove('hidden');
+    } else {
+      rowProposta.classList.add('hidden');
+    }
+  }
 
   Modal.open('modal-empresa');
 }
@@ -171,6 +215,15 @@ function openModal(id = null) {
 function closeModal() {
   Modal.close('modal-empresa');
   document.getElementById('form-empresa').reset();
+  document.getElementById('row-proposta').classList.add('hidden');
+}
+
+function usarProposta() {
+  const id = document.getElementById('f-id').value;
+  const e  = _empresas.find(x => x.id === Number(id));
+  if (e?.limite_credito_proposto != null) {
+    document.getElementById('f-limite').value = e.limite_credito_proposto;
+  }
 }
 
 // ── Excluir ───────────────────────────────────────────────────────

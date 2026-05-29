@@ -43,6 +43,7 @@ CREATE TABLE clientes (
     cnpj VARCHAR(18) UNIQUE NOT NULL,
     inscricao_estadual VARCHAR(50),
     limite_credito DECIMAL(10,2) DEFAULT 0.00,
+    limite_credito_proposto DECIMAL(10,2) NULL DEFAULT NULL,
     representante_id INT, -- Para o requisito de carteira de clientes
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

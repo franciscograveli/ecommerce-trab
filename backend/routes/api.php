@@ -26,7 +26,7 @@ $router->delete('/usuarios/{id}', [UsuarioController::class, 'destroy'], [$A]);
 $router->get('/empresas',         [EmpresaController::class, 'index'],   [$A, $R]);
 $router->post('/empresas',        [EmpresaController::class, 'store'],   [$A, $R]);
 $router->get('/empresas/{id}',    [EmpresaController::class, 'show'],    [$A, $R]);
-$router->put('/empresas/{id}',    [EmpresaController::class, 'update'],  [$A]);
+$router->put('/empresas/{id}',    [EmpresaController::class, 'update'],  [$A, $R]);
 $router->delete('/empresas/{id}', [EmpresaController::class, 'destroy'], [$A]);
 
 $router->get('/produtos',         [ProdutoController::class, 'index'],   [$A, $R, $C]);
