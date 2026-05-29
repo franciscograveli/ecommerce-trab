@@ -71,19 +71,25 @@ class EmpresaController
     public function update(array $params): void
     {
         $usuario = Auth::handle();
+        $perfil  = $usuario['perfil']['nome'] ?? null;
+
+        if (!in_array($perfil, [Perfil::ADMIN, Perfil::REPRESENTANTE])) {
+            json(['erro' => 'Acesso negado'], 403);
+        }
+
         $cliente = Cliente::find($params['id']);
         if (!$cliente) json(['erro' => 'Empresa não encontrada'], 404);
 
-        if (($usuario['perfil']['nome'] ?? null) === Perfil::REPRESENTANTE) {
+        if ($perfil === Perfil::REPRESENTANTE) {
             $repId = Representante::where('usuario_id', $usuario['id'])->value('id');
             if ($cliente->representante_id !== $repId) {
                 json(['erro' => 'Empresa não pertence à sua carteira'], 403);
             }
         }
 
-        $body = bodyParams();
+        $body   = bodyParams();
         $campos = ['razao_social', 'cnpj', 'inscricao_estadual', 'representante_id'];
-        if (($usuario['perfil']['nome'] ?? null) === Perfil::ADMIN) {
+        if ($perfil === Perfil::ADMIN) {
             $campos[] = 'limite_credito';
         }
         $cliente->fill(array_intersect_key($body, array_flip($campos)));

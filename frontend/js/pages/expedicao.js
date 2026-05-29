@@ -262,7 +262,9 @@ async function emitirBoleto() {
     return;
   }
 
-  if (new Date(venc) <= new Date()) {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  if (new Date(venc + 'T00:00:00') <= hoje) {
     showAlert('Data de vencimento deve ser no futuro.', 'error');
     return;
   }

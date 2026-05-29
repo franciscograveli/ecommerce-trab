@@ -41,11 +41,17 @@ class RmaController
         }
 
         if (($usuario['perfil']['nome'] ?? null) === Perfil::COMPRADOR) {
-            $body['comprador_id'] = $usuario['comprador']['id'] ?? $body['comprador_id'];
+            $body['comprador_id'] = $usuario['comprador']['id'] ?? null;
         }
 
         $pedido = Pedido::find($body['pedido_id']);
         if (!$pedido) json(['erro' => 'Pedido não encontrado'], 404);
+
+        if (($usuario['perfil']['nome'] ?? null) === Perfil::COMPRADOR) {
+            if ($pedido->cliente_id !== ($usuario['comprador']['cliente_id'] ?? null)) {
+                json(['erro' => 'Pedido não pertence à sua empresa'], 403);
+            }
+        }
 
         if (!in_array($pedido->status, ['enviado', 'entregue'])) {
             json(['erro' => 'RMA só pode ser aberto para pedidos enviados ou entregues'], 422);
@@ -89,7 +95,7 @@ class RmaController
         $rma->save();
 
         // Devolução concluída: devolve itens ao estoque
-        if ($body['status'] === 'concluido' && $statusAnterior !== 'concluido' && $rma->tipo === 'devolucao') {
+        if ($rma->status === 'concluido' && $statusAnterior !== 'concluido' && $rma->tipo === 'devolucao') {
             $this->incrementarEstoque($rma);
         }
 
