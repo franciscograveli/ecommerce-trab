@@ -1,3 +1,14 @@
+// ── Utilitários ───────────────────────────────────────────────────
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 // ── Modal ─────────────────────────────────────────────────────────
 Modal.build('modal-tabela', {
   title: 'Nova Tabela de Preço',
@@ -89,8 +100,8 @@ function renderTabela() {
 
   tbody.innerHTML = _tabelas.map(t => `
     <tr class="border-b border-brand-brown last:border-0 hover:bg-brand-brown/20 transition-colors">
-      <td class="px-5 py-3.5 text-brand-cream font-medium">${t.nome}</td>
-      <td class="px-5 py-3.5 text-brand-tan">${t.regiao ?? '—'}</td>
+      <td class="px-5 py-3.5 text-brand-cream font-medium">${escapeHtml(t.nome)}</td>
+      <td class="px-5 py-3.5 text-brand-tan">${t.regiao ? escapeHtml(t.regiao) : '—'}</td>
       <td class="px-5 py-3.5 text-brand-tan">${t.regra_volume_minimo ?? 1} un.</td>
       <td class="px-5 py-3.5">
         <div class="flex items-center justify-end gap-4">
@@ -98,7 +109,7 @@ function renderTabela() {
             class="text-brand-tan hover:text-brand-amber transition-colors" title="Editar">
             <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
           </button>
-          <button onclick="excluir(${t.id}, '${t.nome.replace(/'/g, "\\'")}')"
+          <button onclick="excluir(${t.id})"
             class="text-brand-tan hover:text-red-400 transition-colors" title="Excluir">
             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
           </button>
@@ -125,7 +136,8 @@ function closeModal() {
   document.getElementById('form-tabela').reset();
 }
 
-async function excluir(id, nome) {
+async function excluir(id) {
+  const nome = _tabelas.find(x => x.id === id)?.nome ?? '';
   if (!confirm(`Excluir a tabela "${nome}"?\nOs preços vinculados a ela serão removidos.`)) return;
   try {
     await Api.del(`/produtos/tabelas/${id}`);
