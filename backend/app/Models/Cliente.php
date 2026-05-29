@@ -13,6 +13,7 @@ class Cliente extends Model
         'cnpj',
         'inscricao_estadual',
         'limite_credito',
+        'limite_credito_proposto',
         'representante_id',
     ];
 

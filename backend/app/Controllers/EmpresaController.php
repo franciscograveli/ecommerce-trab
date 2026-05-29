@@ -57,12 +57,15 @@ class EmpresaController
             $body['representante_id'] = $repId;
         }
 
+        $isRep = ($usuario['perfil']['nome'] ?? null) === Perfil::REPRESENTANTE;
+
         $cliente = Cliente::create([
-            'razao_social'       => $body['razao_social'],
-            'cnpj'               => $body['cnpj'],
-            'inscricao_estadual' => $body['inscricao_estadual'] ?? null,
-            'limite_credito'     => $body['limite_credito'] ?? 0.00,
-            'representante_id'   => $body['representante_id'] ?? null,
+            'razao_social'            => $body['razao_social'],
+            'cnpj'                    => $body['cnpj'],
+            'inscricao_estadual'      => $body['inscricao_estadual'] ?? null,
+            'limite_credito'          => $isRep ? 0.00 : ($body['limite_credito'] ?? 0.00),
+            'limite_credito_proposto' => $isRep ? ($body['limite_credito_proposto'] ?? null) : null,
+            'representante_id'        => $body['representante_id'] ?? null,
         ]);
 
         json($cliente->toArray(), 201);
@@ -89,9 +92,20 @@ class EmpresaController
 
         $body   = bodyParams();
         $campos = ['razao_social', 'cnpj', 'inscricao_estadual', 'representante_id'];
+
         if ($perfil === Perfil::ADMIN) {
             $campos[] = 'limite_credito';
+            // Ao admin definir o limite, limpa a proposta pendente
+            if (isset($body['limite_credito'])) {
+                $body['limite_credito_proposto'] = null;
+                $campos[] = 'limite_credito_proposto';
+            }
         }
+
+        if ($perfil === Perfil::REPRESENTANTE) {
+            $campos[] = 'limite_credito_proposto';
+        }
+
         $cliente->fill(array_intersect_key($body, array_flip($campos)));
         $cliente->save();
 
