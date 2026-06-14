@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de RMA — B2B Atacado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="/js/tw-config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body class="bg-brand-black font-sans">
+
+  <div id="sidebar"></div>
+  <div id="topbar"></div>
+
+  <main id="main" class="p-6 bg-brand-black">
+
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-brand-cream text-lg font-semibold">Gestão de RMA</h2>
+        <p class="text-brand-tan text-xs mt-0.5">Análise e aprovação de devoluções e trocas</p>
+      </div>
+    </div>
+
+    <div id="alert" class="mb-4"></div>
+
+    <!-- Filtros de status -->
+    <div class="flex gap-2 mb-4 flex-wrap">
+      <button onclick="filtrar('')"      id="tab-"      class="tab-btn tab-ativo">Todos</button>
+      <button onclick="filtrar('aberto')"      id="tab-aberto"      class="tab-btn">Aberto</button>
+      <button onclick="filtrar('em_analise')"  id="tab-em_analise"  class="tab-btn">Em Análise</button>
+      <button onclick="filtrar('aprovado')"    id="tab-aprovado"    class="tab-btn">Aprovado</button>
+      <button onclick="filtrar('concluido')"   id="tab-concluido"   class="tab-btn">Concluído</button>
+      <button onclick="filtrar('rejeitado')"   id="tab-rejeitado"   class="tab-btn">Rejeitado</button>
+    </div>
+
+    <div class="bg-brand-dark border border-brand-brown rounded-xl overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="border-b border-brand-brown">
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">ID</th>
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Cliente / Pedido</th>
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Tipo</th>
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Status</th>
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Data</th>
+              <th class="px-5 py-3"></th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="6" class="px-5 py-10 text-center text-brand-tan">Carregando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <style>
+    .tab-btn {
+      padding: 0.375rem 0.875rem;
+      border-radius: 0.5rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #a89070;
+      background: transparent;
+      border: 1px solid #4a3728;
+      transition: all 0.15s;
+      cursor: pointer;
+    }
+    .tab-btn:hover { background: #2a1f14; }
+    .tab-ativo { background: #92400e; color: #fff; border-color: #92400e; }
+  </style>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/modal.js"></script>
+  <script src="/js/pages/rma-admin.js"></script>
+  <script>Layout('Gestão de RMA');</script>
+</body>
+</html>

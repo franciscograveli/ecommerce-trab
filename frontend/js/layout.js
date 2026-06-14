@@ -16,6 +16,7 @@ const NAV = {
     { label: 'Dashboard',   href: '/pages/dashboard.html',   icon: 'layout-dashboard' },
     { label: 'Empresas',    href: '/pages/empresas.html',    icon: 'building-2' },
     { label: 'Pedidos',     href: '/pages/pedidos.html',     icon: 'file-text' },
+    { label: 'RMA',         href: '/pages/rma-admin.html',   icon: 'rotate-ccw' },
   ],
   comprador: [
     { label: 'Pedidos',    href: '/pages/pedidos.html', icon: 'file-text' },
