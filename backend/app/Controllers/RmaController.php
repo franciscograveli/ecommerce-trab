@@ -41,6 +41,9 @@ class RmaController
         }
 
         if (($usuario['perfil']['nome'] ?? null) === Perfil::COMPRADOR) {
+            if (empty($usuario['comprador'])) {
+                $usuario['comprador'] = \App\Models\Comprador::where('usuario_id', $usuario['id'])->first()?->toArray();
+            }
             $body['comprador_id'] = $usuario['comprador']['id'] ?? null;
         }
 
@@ -55,6 +58,15 @@ class RmaController
 
         if (!in_array($pedido->status, ['enviado', 'entregue'])) {
             json(['erro' => 'RMA só pode ser aberto para pedidos enviados ou entregues'], 422);
+        }
+
+        // Impede duplicidade de RMA para o mesmo pedido (exceto se o anterior foi rejeitado)
+        $rmaExistente = RmaSolicitacao::where('pedido_id', $body['pedido_id'])
+            ->where('status', '!=', 'rejeitado')
+            ->exists();
+
+        if ($rmaExistente) {
+            json(['erro' => 'Já existe uma solicitação de RMA ativa ou concluída para este pedido'], 409);
         }
 
         $rma = RmaSolicitacao::create([
