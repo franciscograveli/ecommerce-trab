@@ -66,6 +66,7 @@ Modal.build('modal-itens', {
 let _pedidos   = [];
 let _empresas  = [];
 let _produtos  = [];
+let _rmas      = [];
 let _filtro    = '';
 let _pedidoAtivoId = null;
 const _usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
@@ -80,14 +81,16 @@ async function init() {
   }
 
   try {
-    const [pedidos, empresas, produtos] = await Promise.all([
+    const [pedidos, empresas, produtos, rmas] = await Promise.all([
       Api.get('/pedidos'),
       perfil !== 'comprador' ? Api.get('/empresas') : Promise.resolve([]),
       Api.get('/produtos'),
+      Api.get('/rma'),
     ]);
     _pedidos  = pedidos;
     _empresas = empresas;
     _produtos = produtos;
+    _rmas     = rmas;
     renderTabela();
     _preencherSelectEmpresas();
   } catch {
@@ -158,6 +161,18 @@ function renderTabela() {
          </button>`
       : '';
 
+    // Verifica se já existe um RMA não rejeitado para este pedido
+    const temRmaAtivo = _rmas.some(r => r.pedido_id === p.id && r.status !== 'rejeitado');
+
+    const btnRMA = ['enviado', 'entregue'].includes(String(p.status).toLowerCase()) 
+      && (_usuario.perfil?.nome ?? _usuario.perfil ?? '').toLowerCase() === 'comprador'
+      && !temRmaAtivo
+      ? `<button onclick="solicitarRMA(${p.id})"
+          class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-brand-primary/20 text-brand-amber hover:bg-brand-primary/40 transition-colors">
+          Devolver
+         </button>`
+      : '';
+
     return `
       <tr class="border-b border-brand-brown last:border-0 hover:bg-brand-brown/20 transition-colors">
         <td class="px-5 py-3.5 text-brand-tan font-mono">#${p.id}</td>
@@ -168,7 +183,7 @@ function renderTabela() {
         </td>
         <td class="px-5 py-3.5 text-brand-tan">${data}</td>
         <td class="px-5 py-3.5">
-          <div class="flex items-center justify-end gap-2">${btnItens}${btnCancelar}</div>
+          <div class="flex items-center justify-end gap-2">${btnItens}${btnRMA}${btnCancelar}</div>
         </td>
       </tr>`;
   }).join('');
@@ -179,6 +194,7 @@ function renderTabela() {
 // ── Modal criar orçamento ──────────────────────────────────────────
 function _preencherSelectEmpresas() {
   const sel = document.getElementById('f-empresa');
+  if (!sel) return;
   sel.innerHTML = '<option value="">Selecione…</option>' +
     _empresas.map(e => `<option value="${e.id}">${e.razao_social}</option>`).join('');
 }
@@ -379,6 +395,10 @@ async function cancelar(id) {
   } catch (err) {
     showAlert(err.erro ?? 'Erro ao cancelar pedido.', 'error');
   }
+}
+
+function solicitarRMA(pedidoId) {
+  window.location.href = `/pages/rma.html?pedido_id=${pedidoId}`;
 }
 
 // ── Alerta ────────────────────────────────────────────────────────
