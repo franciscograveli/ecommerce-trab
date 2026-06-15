@@ -67,7 +67,7 @@ Modal.build('modal-precos', {
         </div>
         <div>
           <label class="${Modal.LABEL}">Preço (R$) *</label>
-          <input type="number" id="p-preco" min="0" step="0.01" placeholder="0,00" class="${Modal.INPUT}">
+          <input type="text" id="p-preco" class="${Modal.INPUT}">
         </div>
       </div>
       <div class="flex justify-end mt-4">
@@ -103,6 +103,9 @@ Modal.build('modal-tabela', {
       </div>
     </form>`,
 });
+
+// ── Máscaras ──────────────────────────────────────────────────────
+Mask.currency(document.getElementById('p-preco'));
 
 // ── Estado ────────────────────────────────────────────────────────
 let _produtos = [];
@@ -423,7 +426,7 @@ document.getElementById('form-preco').addEventListener('submit', async (ev) => {
   try {
     await Api.post(`/produtos/${_precoProdutoId}/precos`, {
       tabela_preco_id: parseInt(tabelaId),
-      preco:           parseFloat(preco),
+      preco:           Mask.parseCurrency(preco),
     });
     document.getElementById('form-preco').reset();
     await renderPrecos();
