@@ -22,7 +22,7 @@ class Auth
 
         $token = Token::where('token', $raw)
             ->where('expires_at', '>', date('Y-m-d H:i:s'))
-            ->with('usuario.perfil')
+            ->with(['usuario.perfil', 'usuario.comprador', 'usuario.representante'])
             ->first();
 
         if (!$token) {

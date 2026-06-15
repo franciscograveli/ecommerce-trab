@@ -19,8 +19,8 @@
   <main id="main" class="p-6 bg-brand-black">
 
     <div class="mb-6">
-      <h2 class="text-brand-cream text-lg font-semibold">Aprovação de Crédito</h2>
-      <p class="text-brand-tan text-xs mt-0.5">Pedidos aguardando liberação financeira</p>
+      <h2 class="text-brand-cream text-lg font-semibold">Fila de Aprovação</h2>
+      <p class="text-brand-tan text-xs mt-0.5">Pedidos bloqueados por crédito ou estoque insuficiente</p>
     </div>
 
     <div id="alert" class="mb-4"></div>
@@ -43,6 +43,7 @@
             <tr class="border-b border-brand-brown">
               <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">#</th>
               <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Empresa</th>
+              <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Motivo</th>
               <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Valor Pedido</th>
               <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Lim. Crédito</th>
               <th class="px-5 py-3 text-left text-brand-tan font-semibold uppercase tracking-wider">Data</th>
@@ -50,7 +51,7 @@
             </tr>
           </thead>
           <tbody id="tbody">
-            <tr><td colspan="6" class="px-5 py-10 text-center text-brand-tan">Carregando…</td></tr>
+            <tr><td colspan="7" class="px-5 py-10 text-center text-brand-tan">Carregando…</td></tr>
           </tbody>
         </table>
       </div>

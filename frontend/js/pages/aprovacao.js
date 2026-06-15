@@ -7,7 +7,7 @@ async function init() {
       Api.get('/pedidos'),
       Api.get('/empresas'),
     ]);
-    _pedidos  = pedidos.filter(p => p.status === 'aguardando_aprovacao_credito');
+    _pedidos  = pedidos.filter(p => ['aguardando_aprovacao_credito', 'aguardando_estoque'].includes(p.status));
     _empresas = empresas;
 
     document.getElementById('stat-count').textContent = _pedidos.length;
@@ -23,7 +23,7 @@ function renderTabela() {
   if (_pedidos.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" class="px-5 py-12 text-center text-brand-tan">
+        <td colspan="7" class="px-5 py-12 text-center text-brand-tan">
           Nenhum pedido aguardando aprovação.
         </td>
       </tr>`;
@@ -40,13 +40,16 @@ function renderTabela() {
     const data    = p.created_at
       ? new Date(p.created_at).toLocaleDateString('pt-BR')
       : '—';
-    const excede  = empresa && Number(p.valor_total) > Number(empresa.limite_credito);
+    const motivo  = p.status === 'aguardando_estoque'
+      ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-900/60 text-orange-300">Estoque</span>'
+      : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-900/60 text-yellow-300">Crédito</span>';
 
     return `
       <tr class="border-b border-brand-brown last:border-0 hover:bg-brand-brown/20 transition-colors">
         <td class="px-5 py-3.5 text-brand-tan font-mono">#${p.id}</td>
         <td class="px-5 py-3.5 text-brand-cream font-medium">${razao}</td>
-        <td class="px-5 py-3.5 font-semibold ${excede ? 'text-red-400' : 'text-brand-cream'}">${valor}</td>
+        <td class="px-5 py-3.5 text-brand-tan">${motivo}</td>
+        <td class="px-5 py-3.5 font-semibold text-brand-cream">${valor}</td>
         <td class="px-5 py-3.5 text-brand-tan">${limite}</td>
         <td class="px-5 py-3.5 text-brand-tan">${data}</td>
         <td class="px-5 py-3.5">

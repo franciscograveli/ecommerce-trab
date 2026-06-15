@@ -7,7 +7,13 @@ Modal.build('modal-pedido', {
     <form id="form-pedido" class="flex flex-col gap-4">
       <div id="f-empresa-wrap">
         <label class="${Modal.LABEL}">Empresa *</label>
-        <select id="f-empresa" required class="${Modal.SELECT}">
+        <select id="f-empresa" required class="${Modal.SELECT}" onchange="carregarCompradores(this.value)">
+          <option value="">Selecione…</option>
+        </select>
+      </div>
+      <div id="f-comprador-wrap" class="hidden">
+        <label class="${Modal.LABEL}">Comprador *</label>
+        <select id="f-comprador" class="${Modal.SELECT}">
           <option value="">Selecione…</option>
         </select>
       </div>
@@ -42,6 +48,7 @@ Modal.build('modal-itens', {
           <div>
             <label class="${Modal.LABEL}">Preço Unit. (R$) *</label>
             <input type="number" id="f-preco" min="0" step="0.01" required class="${Modal.INPUT}">
+            <p id="volume-hint" class="text-[10px] text-orange-400 mt-1"></p>
           </div>
         </div>
         <div class="flex justify-end">
@@ -69,6 +76,7 @@ let _produtos  = [];
 let _rmas      = [];
 let _filtro    = '';
 let _pedidoAtivoId = null;
+let _itensAtuais   = [];
 const _usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
 
 // ── Init ──────────────────────────────────────────────────────────
@@ -110,6 +118,7 @@ function filtrar(status) {
 const STATUS_BADGE = {
   orcamento:                    'bg-gray-100 text-gray-600',
   aguardando_aprovacao_credito: 'bg-yellow-100 text-yellow-700',
+  aguardando_estoque:           'bg-orange-100 text-orange-700',
   aprovado:                     'bg-green-100 text-green-700',
   em_separacao:                 'bg-blue-100 text-blue-700',
   enviado:                      'bg-indigo-100 text-indigo-700',
@@ -118,7 +127,8 @@ const STATUS_BADGE = {
 };
 const STATUS_LABEL = {
   orcamento:                    'Orçamento',
-  aguardando_aprovacao_credito: 'Aguard. Aprovação',
+  aguardando_aprovacao_credito: 'Aguard. Crédito',
+  aguardando_estoque:           'Aguard. Estoque',
   aprovado:                     'Aprovado',
   em_separacao:                 'Em Separação',
   enviado:                      'Enviado',
@@ -140,7 +150,7 @@ function renderTabela() {
   }
 
   const podeEditar = ['admin', 'representante'].includes((_usuario.perfil?.nome ?? _usuario.perfil ?? '').toLowerCase());
-  const podeCancelar = ['orcamento', 'aguardando_aprovacao_credito'];
+  const podeCancelar = ['orcamento', 'aguardando_aprovacao_credito', 'aguardando_estoque'];
 
   tbody.innerHTML = lista.map(p => {
     const empresa = p.cliente?.razao_social ?? '—';
@@ -199,8 +209,37 @@ function _preencherSelectEmpresas() {
     _empresas.map(e => `<option value="${e.id}">${e.razao_social}</option>`).join('');
 }
 
+async function carregarCompradores(clienteId) {
+  const wrap = document.getElementById('f-comprador-wrap');
+  const sel  = document.getElementById('f-comprador');
+  const perfil = (_usuario.perfil?.nome ?? _usuario.perfil ?? '').toLowerCase();
+
+  if (!clienteId || perfil === 'comprador') {
+    wrap.classList.add('hidden');
+    return;
+  }
+
+  sel.innerHTML = '<option value="">Carregando…</option>';
+  wrap.classList.remove('hidden');
+
+  try {
+    const empresa = await Api.get(`/empresas/${clienteId}`);
+    const compradores = empresa.compradores ?? [];
+    if (compradores.length === 0) {
+      sel.innerHTML = '<option value="">Nenhum comprador cadastrado</option>';
+    } else {
+      sel.innerHTML = '<option value="">Selecione…</option>' +
+        compradores.map(c => `<option value="${c.id}">${c.usuario?.nome ?? `Comprador #${c.id}`}</option>`).join('');
+    }
+  } catch {
+    sel.innerHTML = '<option value="">Erro ao carregar</option>';
+  }
+}
+
 function openModalPedido() {
   document.getElementById('form-pedido').reset();
+  document.getElementById('f-comprador-wrap').classList.add('hidden');
+  document.getElementById('f-comprador').innerHTML = '<option value="">Selecione…</option>';
   Modal.open('modal-pedido');
 }
 
@@ -215,9 +254,17 @@ document.getElementById('form-pedido').addEventListener('submit', async (ev) => 
     return;
   }
 
+  const compradorId = _usuario.comprador?.id
+    ?? (parseInt(document.getElementById('f-comprador')?.value) || null);
+
+  if (!compradorId) {
+    showAlert('Selecione um comprador.', 'error');
+    return;
+  }
+
   const body = {
     cliente_id:   resolvedClienteId,
-    comprador_id: _usuario.comprador?.id ?? 1,
+    comprador_id: compradorId,
   };
 
   btn.disabled = true;
@@ -242,6 +289,9 @@ async function openModalItens(pedidoId) {
   _pedidoAtivoId = pedidoId;
   document.getElementById('modal-itens-title').textContent = `Itens do Pedido #${pedidoId}`;
   document.getElementById('lista-itens').innerHTML = '<p class="text-xs text-gray-400">Carregando…</p>';
+  document.getElementById('form-item').reset();
+  const hintEl = document.getElementById('volume-hint');
+  if (hintEl) hintEl.textContent = '';
   Modal.open('modal-itens');
 
   try {
@@ -257,6 +307,7 @@ async function openModalItens(pedidoId) {
 }
 
 function _renderItens(pedido, itens) {
+  _itensAtuais = itens;
   const isOrcamento = pedido.status === 'orcamento';
   const addWrap = document.getElementById('add-item-wrap');
   const btnConfirmar = document.getElementById('btn-confirmar');
@@ -264,6 +315,12 @@ function _renderItens(pedido, itens) {
 
   addWrap.classList.toggle('hidden', !isOrcamento);
   btnConfirmar.classList.toggle('hidden', !isOrcamento);
+  if (isOrcamento) {
+    btnConfirmar.disabled = itens.length === 0;
+    btnConfirmar.title    = itens.length === 0 ? 'Adicione pelo menos um item antes de confirmar' : '';
+    btnConfirmar.classList.toggle('opacity-40', itens.length === 0);
+    btnConfirmar.classList.toggle('cursor-not-allowed', itens.length === 0);
+  }
 
   const statusLabel = STATUS_LABEL[pedido.status] ?? pedido.status;
   infoEl.textContent = `Status: ${statusLabel} · Empresa: ${pedido.cliente?.razao_social ?? '—'}`;
@@ -321,12 +378,32 @@ function _preencherSelectGrades(pedido) {
   const sel = document.getElementById('f-grade');
   const grades = _produtos.flatMap(p =>
     (p.grades ?? []).map(g => ({
-      id:    g.id,
-      label: `${p.nome} — ${g.sku}${g.tamanho ? ' / ' + g.tamanho : ''}${g.cor ? ' / ' + g.cor : ''}`,
+      id:        g.id,
+      produto_id: p.id,
+      label:     `${p.nome} — ${g.sku}${g.tamanho ? ' / ' + g.tamanho : ''}${g.cor ? ' / ' + g.cor : ''}`,
     }))
   );
   sel.innerHTML = '<option value="">Selecione…</option>' +
-    grades.map(g => `<option value="${g.id}">${g.label}</option>`).join('');
+    grades.map(g => `<option value="${g.id}" data-produto="${g.produto_id}">${g.label}</option>`).join('');
+
+  sel.onchange = async () => {
+    const opt = sel.selectedOptions[0];
+    const produtoId = opt?.dataset?.produto;
+    const hintEl = document.getElementById('volume-hint');
+    if (hintEl) hintEl.textContent = '';
+    document.getElementById('f-preco').value = '';
+    if (!produtoId) return;
+
+    try {
+      const precos = await Api.get(`/produtos/${produtoId}/precos`);
+      if (precos.length > 0) {
+        document.getElementById('f-preco').value = precos[0].preco;
+        if (precos[0].tabela?.regra_volume_minimo > 1 && hintEl) {
+          hintEl.textContent = `Vol. mín.: ${precos[0].tabela.regra_volume_minimo} un. (${precos[0].tabela.nome})`;
+        }
+      }
+    } catch (_) {}
+  };
 }
 
 document.getElementById('form-item').addEventListener('submit', async (ev) => {
@@ -368,6 +445,10 @@ async function removerItem(itemId) {
 
 // ── Confirmar orçamento → pedido ──────────────────────────────────
 async function confirmarOrcamento() {
+  if (_itensAtuais.length === 0) {
+    showAlert('Adicione pelo menos um item antes de confirmar o pedido.', 'error');
+    return;
+  }
   if (!confirm('Confirmar orçamento? O pedido será enviado para aprovação ou aprovado automaticamente conforme o limite de crédito.')) return;
   try {
     const pedido = await Api.put(`/pedidos/${_pedidoAtivoId}`, { status: 'aprovado' });
@@ -375,7 +456,9 @@ async function confirmarOrcamento() {
     _pedidos = await Api.get('/pedidos');
     renderTabela();
     if (pedido.status === 'aguardando_aprovacao_credito') {
-      showAlert('Pedido enviado para aprovação de crédito.', 'success');
+      showAlert('Limite de crédito excedido — pedido enviado para aprovação financeira.', 'success');
+    } else if (pedido.status === 'aguardando_estoque') {
+      showAlert('Estoque insuficiente — pedido ficará na fila até o estoque ser reposto.', 'success');
     } else {
       showAlert('Pedido aprovado com sucesso.', 'success');
     }

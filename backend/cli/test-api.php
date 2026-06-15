@@ -311,8 +311,8 @@ $tokenComp = $rComp2['body']['token'] ?? $tokenComp;
 $novoPedido = request('POST', '/pedidos', [
     'cliente_id'   => $clienteId,
     'comprador_id' => 1,
-], $tokenComp);
-check('Criar orçamento → 201 com status orcamento', 201, $novoPedido,
+], $tokenAdmin);
+check('Criar orçamento (admin) → 201 com status orcamento', 201, $novoPedido,
     fn($b) => $b['status'] === 'orcamento');
 $pedidoId = $novoPedido['body']['id'] ?? null;
 
@@ -348,11 +348,19 @@ $empresaForaCarteira = request('POST', '/empresas', [
 ], $tokenAdmin);
 $empresaForaCarteiraId = $empresaForaCarteira['body']['id'] ?? null;
 
+// Rep tenta criar pedido fora da carteira → 403 (esperado)
 $pedidoForaCarteira = request('POST', '/pedidos', [
     'cliente_id'   => $empresaForaCarteiraId,
     'comprador_id' => 1,
 ], $tokenRep);
-$pedidoForaId = $pedidoForaCarteira['body']['id'] ?? null;
+check('[#44] Rep não pode criar pedido fora da carteira → 403', 403, $pedidoForaCarteira);
+
+// Admin cria pedido para empresa fora da carteira (para testar visibilidade)
+$pedidoForaCarteiraAdmin = request('POST', '/pedidos', [
+    'cliente_id'   => $empresaForaCarteiraId,
+    'comprador_id' => 1,
+], $tokenAdmin);
+$pedidoForaId = $pedidoForaCarteiraAdmin['body']['id'] ?? null;
 
 $pedidosRepFinal   = request('GET', '/pedidos', [], $tokenRep);
 $pedidosAdminFinal = request('GET', '/pedidos', [], $tokenAdmin);
@@ -461,7 +469,122 @@ check('Comprador atualiza RMA → 403', 403,
     request('PUT', "/rma/$rmaId/status", ['status' => 'aprovado'], $tokenComp));
 
 // -------------------------------------------------------
-// 10. Logout
+// 10. #50 — Status aguardando_estoque
+// -------------------------------------------------------
+
+section('#50 — aguardando_estoque');
+
+// Grade com estoque zerado para forçar o bloqueio
+$skuSemEstoque = 'SEM-EST-' . time();
+$gradeSemEst = request('POST', "/produtos/$prodId/grades", [
+    'sku' => $skuSemEstoque, 'cor' => 'Cinza', 'tamanho' => 'G',
+], $tokenAdmin);
+$gradeSemEstId = $gradeSemEst['body']['id'] ?? null;
+
+// Pedido com grade sem estoque
+$pedidoSemEst = request('POST', '/pedidos', [
+    'cliente_id'   => $clienteId,
+    'comprador_id' => 1,
+], $tokenAdmin);
+$pedidoSemEstId = $pedidoSemEst['body']['id'] ?? null;
+
+request('POST', "/pedidos/$pedidoSemEstId/itens", [
+    'grade_id' => $gradeSemEstId, 'quantidade' => 10, 'preco_unitario' => 49.90,
+], $tokenAdmin);
+
+// Confirmar com estoque zerado → deve ir para aguardando_estoque (não 422)
+$confirmSemEst = request('PUT', "/pedidos/$pedidoSemEstId", ['status' => 'aprovado'], $tokenAdmin);
+check('[#50] Confirmar sem estoque → status aguardando_estoque (não 422)', 200, $confirmSemEst,
+    fn($b) => $b['status'] === 'aguardando_estoque');
+
+// Tentar aprovar novamente ainda sem estoque → 422
+$aprovSemEst = request('PUT', "/pedidos/$pedidoSemEstId", ['status' => 'aprovado'], $tokenAdmin);
+check('[#50] Aprovar em aguardando_estoque sem repor → 422', 422, $aprovSemEst);
+
+// Repor estoque
+request('POST', '/estoque/entrada', [
+    'grade_id' => $gradeSemEstId, 'deposito_id' => $depositoId, 'quantidade' => 50,
+], $tokenAdmin);
+
+// Aprovar após repor → deve funcionar
+$aprovComEst = request('PUT', "/pedidos/$pedidoSemEstId", ['status' => 'aprovado'], $tokenAdmin);
+check('[#50] Aprovar após repor estoque → status aprovado', 200, $aprovComEst,
+    fn($b) => $b['status'] === 'aprovado');
+
+// Pedido com crédito excedido → aguardando_aprovacao_credito (comportamento anterior preservado)
+$empresaBaixoLimite = request('POST', '/empresas', [
+    'razao_social'   => 'Empresa Baixo Limite',
+    'cnpj'           => '11.222.333/0001-' . substr(time(), -2),
+    'limite_credito' => 1.00,
+], $tokenAdmin);
+$empBaixoId = $empresaBaixoLimite['body']['id'] ?? null;
+
+$pedidoBaixo = request('POST', '/pedidos', [
+    'cliente_id'   => $empBaixoId,
+    'comprador_id' => 1,
+], $tokenAdmin);
+$pedidoBaixoId = $pedidoBaixo['body']['id'] ?? null;
+
+request('POST', "/pedidos/$pedidoBaixoId/itens", [
+    'grade_id' => $gradeId, 'quantidade' => 1, 'preco_unitario' => 49.90,
+], $tokenAdmin);
+
+$confirmBaixo = request('PUT', "/pedidos/$pedidoBaixoId", ['status' => 'aprovado'], $tokenAdmin);
+check('[#50] Crédito excedido ainda vai para aguardando_aprovacao_credito', 200, $confirmBaixo,
+    fn($b) => $b['status'] === 'aguardando_aprovacao_credito');
+
+// -------------------------------------------------------
+// 11. #56 — Validação de volume mínimo
+// -------------------------------------------------------
+
+section('#56 — Volume mínimo');
+
+// Tabela com volume mínimo = 5
+$tabelaVolMin = request('POST', '/produtos/tabelas', [
+    'nome' => 'Tabela VolMin5', 'regra_volume_minimo' => 5,
+], $tokenAdmin);
+$tabelaVolMinId = $tabelaVolMin['body']['id'] ?? null;
+check('Criar tabela com vol. mínimo 5 → 201', 201, $tabelaVolMin);
+
+// Preço R$99 nessa tabela para o produto de teste
+request('POST', "/produtos/$prodId/precos", [
+    'tabela_preco_id' => $tabelaVolMinId, 'preco' => 99.00,
+], $tokenAdmin);
+
+// Pedido para adicionar itens
+$pedidoVolMin = request('POST', '/pedidos', [
+    'cliente_id'   => $clienteId,
+    'comprador_id' => 1,
+], $tokenAdmin);
+$pedidoVolMinId = $pedidoVolMin['body']['id'] ?? null;
+
+// Quantidade 2 com preço da tabela vol mínimo 5 → 422
+$itemAbaixo = request('POST', "/pedidos/$pedidoVolMinId/itens", [
+    'grade_id' => $gradeId, 'quantidade' => 2, 'preco_unitario' => 99.00,
+], $tokenAdmin);
+check('[#56] Qtd abaixo do volume mínimo (2 < 5) → 422', 422, $itemAbaixo,
+    fn($b) => isset($b['erro']) && str_contains($b['erro'], 'mínima'));
+
+// Quantidade exata no mínimo → 201
+$itemExato = request('POST', "/pedidos/$pedidoVolMinId/itens", [
+    'grade_id' => $gradeId, 'quantidade' => 5, 'preco_unitario' => 99.00,
+], $tokenAdmin);
+check('[#56] Qtd exatamente no mínimo (5 = 5) → 201', 201, $itemExato);
+
+// Quantidade acima do mínimo → 201
+$itemAcima = request('POST', "/pedidos/$pedidoVolMinId/itens", [
+    'grade_id' => $gradeId, 'quantidade' => 10, 'preco_unitario' => 99.00,
+], $tokenAdmin);
+check('[#56] Qtd acima do mínimo (10 > 5) → 201', 201, $itemAcima);
+
+// Preço sem tabela (custom) → não bloqueia, mesmo quantidade baixa
+$itemCustom = request('POST', "/pedidos/$pedidoVolMinId/itens", [
+    'grade_id' => $gradeId, 'quantidade' => 1, 'preco_unitario' => 1.00,
+], $tokenAdmin);
+check('[#56] Preço customizado (sem tabela) → não bloqueia → 201', 201, $itemCustom);
+
+// -------------------------------------------------------
+// 12. Logout
 // -------------------------------------------------------
 
 section('Logout');
