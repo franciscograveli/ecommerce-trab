@@ -76,6 +76,7 @@ let _produtos  = [];
 let _rmas      = [];
 let _filtro    = '';
 let _pedidoAtivoId = null;
+let _itensAtuais   = [];
 const _usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
 
 // ── Init ──────────────────────────────────────────────────────────
@@ -288,6 +289,9 @@ async function openModalItens(pedidoId) {
   _pedidoAtivoId = pedidoId;
   document.getElementById('modal-itens-title').textContent = `Itens do Pedido #${pedidoId}`;
   document.getElementById('lista-itens').innerHTML = '<p class="text-xs text-gray-400">Carregando…</p>';
+  document.getElementById('form-item').reset();
+  const hintEl = document.getElementById('volume-hint');
+  if (hintEl) hintEl.textContent = '';
   Modal.open('modal-itens');
 
   try {
@@ -303,6 +307,7 @@ async function openModalItens(pedidoId) {
 }
 
 function _renderItens(pedido, itens) {
+  _itensAtuais = itens;
   const isOrcamento = pedido.status === 'orcamento';
   const addWrap = document.getElementById('add-item-wrap');
   const btnConfirmar = document.getElementById('btn-confirmar');
@@ -310,6 +315,12 @@ function _renderItens(pedido, itens) {
 
   addWrap.classList.toggle('hidden', !isOrcamento);
   btnConfirmar.classList.toggle('hidden', !isOrcamento);
+  if (isOrcamento) {
+    btnConfirmar.disabled = itens.length === 0;
+    btnConfirmar.title    = itens.length === 0 ? 'Adicione pelo menos um item antes de confirmar' : '';
+    btnConfirmar.classList.toggle('opacity-40', itens.length === 0);
+    btnConfirmar.classList.toggle('cursor-not-allowed', itens.length === 0);
+  }
 
   const statusLabel = STATUS_LABEL[pedido.status] ?? pedido.status;
   infoEl.textContent = `Status: ${statusLabel} · Empresa: ${pedido.cliente?.razao_social ?? '—'}`;
@@ -434,6 +445,10 @@ async function removerItem(itemId) {
 
 // ── Confirmar orçamento → pedido ──────────────────────────────────
 async function confirmarOrcamento() {
+  if (_itensAtuais.length === 0) {
+    showAlert('Adicione pelo menos um item antes de confirmar o pedido.', 'error');
+    return;
+  }
   if (!confirm('Confirmar orçamento? O pedido será enviado para aprovação ou aprovado automaticamente conforme o limite de crédito.')) return;
   try {
     const pedido = await Api.put(`/pedidos/${_pedidoAtivoId}`, { status: 'aprovado' });
