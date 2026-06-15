@@ -30,7 +30,7 @@ Modal.build('modal-exp', {
 
       <div>
         <label class="${Modal.LABEL}">Valor do Frete (R$)</label>
-        <input type="number" id="exp-frete" min="0" step="0.01" class="${Modal.INPUT}">
+        <input type="text" id="exp-frete" class="${Modal.INPUT}">
       </div>
 
       <div id="section-boleto" class="border-t border-gray-100 pt-4">
@@ -85,6 +85,10 @@ Modal.build('modal-nova', {
     </form>`,
 });
 
+// ── Máscaras ──────────────────────────────────────────────────────
+Mask.currency(document.getElementById('exp-frete'));
+Mask.boletoLine(document.getElementById('bol-linha'));
+
 // ── Estado ────────────────────────────────────────────────────────
 let _expedicoes = [];
 let _filtro     = '';
@@ -107,7 +111,7 @@ document.getElementById('form-exp').addEventListener('submit', async (ev) => {
     status_logistica: document.getElementById('exp-status').value,
     transportadora:   document.getElementById('exp-transportadora').value.trim() || null,
     codigo_rastreio:  document.getElementById('exp-rastreio').value.trim() || null,
-    valor_frete:      parseFloat(document.getElementById('exp-frete').value) || null,
+    valor_frete:      Mask.parseCurrency(document.getElementById('exp-frete').value),
   };
 
   btn.disabled = true;
@@ -240,7 +244,7 @@ function openModalExp(id) {
   document.getElementById('exp-status').value         = e?.status_logistica ?? 'picking_pendente';
   document.getElementById('exp-transportadora').value = e?.transportadora ?? '';
   document.getElementById('exp-rastreio').value       = e?.codigo_rastreio ?? '';
-  document.getElementById('exp-frete').value          = e?.valor_frete ?? '';
+  Mask.setCurrency(document.getElementById('exp-frete'), e?.valor_frete ?? '');
   document.getElementById('bol-linha').value          = '';
   document.getElementById('bol-url').value            = '';
   document.getElementById('bol-vencimento').value     = '';

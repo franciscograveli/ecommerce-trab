@@ -33,7 +33,7 @@ Modal.build('modal-usuario', {
 
       <div id="field-comissao" class="hidden">
         <label class="${Modal.LABEL}">Comissão (%)</label>
-        <input type="number" id="f-comissao" min="0" max="100" step="0.01" placeholder="0,00" class="${Modal.INPUT}">
+        <input type="text" id="f-comissao" class="${Modal.INPUT}">
       </div>
 
       <div id="field-empresa" class="hidden">
@@ -49,6 +49,9 @@ Modal.build('modal-usuario', {
       </div>
     </form>`,
 });
+
+// ── Máscaras ──────────────────────────────────────────────────────
+Mask.percent(document.getElementById('f-comissao'));
 
 // ── Estado ────────────────────────────────────────────────────────
 let _usuarios = [];
@@ -75,7 +78,7 @@ document.getElementById('form-usuario').addEventListener('submit', async (ev) =>
   };
 
   if (perfil === '2') {
-    body.percentual_comissao = parseFloat(document.getElementById('f-comissao').value) || 0;
+    body.percentual_comissao = Mask.parsePercent(document.getElementById('f-comissao').value) ?? 0;
   }
   if (perfil === '3') {
     body.cliente_id = parseInt(document.getElementById('f-empresa').value) || undefined;
@@ -200,7 +203,7 @@ function openModal(id = null) {
     fSenha.placeholder = '';
   }
 
-  document.getElementById('f-comissao').value = u?.representante?.percentual_comissao ?? '';
+  Mask.setPercent(document.getElementById('f-comissao'), u?.representante?.percentual_comissao ?? '');
   document.getElementById('f-empresa').value  = u?.comprador?.cliente_id ?? '';
 
   onPerfilChange();

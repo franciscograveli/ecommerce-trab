@@ -47,7 +47,7 @@ Modal.build('modal-itens', {
           </div>
           <div>
             <label class="${Modal.LABEL}">Preço Unit. (R$) *</label>
-            <input type="number" id="f-preco" min="0" step="0.01" required class="${Modal.INPUT}">
+            <input type="text" id="f-preco" required class="${Modal.INPUT}">
             <p id="volume-hint" class="text-[10px] text-orange-400 mt-1"></p>
           </div>
         </div>
@@ -68,6 +68,9 @@ Modal.build('modal-itens', {
       </div>
     </div>`,
 });
+
+// ── Máscaras ──────────────────────────────────────────────────────
+Mask.currency(document.getElementById('f-preco'));
 
 // ── Estado ────────────────────────────────────────────────────────
 let _pedidos   = [];
@@ -397,7 +400,7 @@ function _preencherSelectGrades(pedido) {
     try {
       const precos = await Api.get(`/produtos/${produtoId}/precos`);
       if (precos.length > 0) {
-        document.getElementById('f-preco').value = precos[0].preco;
+        Mask.setCurrency(document.getElementById('f-preco'), precos[0].preco);
         if (precos[0].tabela?.regra_volume_minimo > 1 && hintEl) {
           hintEl.textContent = `Vol. mín.: ${precos[0].tabela.regra_volume_minimo} un. (${precos[0].tabela.nome})`;
         }
@@ -411,7 +414,7 @@ document.getElementById('form-item').addEventListener('submit', async (ev) => {
   const body = {
     grade_id:       parseInt(document.getElementById('f-grade').value),
     quantidade:     parseInt(document.getElementById('f-qtd').value),
-    preco_unitario: parseFloat(document.getElementById('f-preco').value),
+    preco_unitario: Mask.parseCurrency(document.getElementById('f-preco').value),
   };
   try {
     await Api.post(`/pedidos/${_pedidoAtivoId}/itens`, body);
