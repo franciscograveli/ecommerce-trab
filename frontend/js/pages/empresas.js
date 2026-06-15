@@ -57,6 +57,16 @@ Modal.build('modal-empresa', {
 let _empresas = [];
 let _isRep    = false;
 
+// ── Máscara CNPJ ─────────────────────────────────────────────────
+document.getElementById('f-cnpj').addEventListener('input', (ev) => {
+  let v = ev.target.value.replace(/\D/g, '').slice(0, 14);
+  if (v.length > 12) v = v.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, '$1.$2.$3/$4-$5');
+  else if (v.length > 8) v = v.replace(/^(\d{2})(\d{3})(\d{3})(\d{0,4})/,    '$1.$2.$3/$4');
+  else if (v.length > 5) v = v.replace(/^(\d{2})(\d{3})(\d{0,3})/,            '$1.$2.$3');
+  else if (v.length > 2) v = v.replace(/^(\d{2})(\d{0,3})/,                   '$1.$2');
+  ev.target.value = v;
+});
+
 // ── Submit ────────────────────────────────────────────────────────
 document.getElementById('form-empresa').addEventListener('submit', async (ev) => {
   ev.preventDefault();
