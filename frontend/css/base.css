@@ -99,6 +99,25 @@
   }
 }
 
+/* ── Alert / Toast ──────────────────────────────────────────── */
+#alert {
+  position: fixed;
+  bottom: 14px;
+  right: 14px;
+  z-index: 999;
+  min-width: 300px;
+  max-width: 420px;
+  pointer-events: none;
+}
+
+@media (max-width: 1023px) {
+  #alert {
+    left: 10px;
+    right: 10px;
+    max-width: none;
+  }
+}
+
 .bg-brand-primary {
   background-color: rgb(var(--brand-primary-rgb));
 }
