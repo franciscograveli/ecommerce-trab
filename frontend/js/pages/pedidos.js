@@ -48,6 +48,7 @@ Modal.build('modal-itens', {
           <div>
             <label class="${Modal.LABEL}">Preço Unit. (R$) *</label>
             <input type="number" id="f-preco" min="0" step="0.01" required class="${Modal.INPUT}">
+            <p id="volume-hint" class="text-[10px] text-orange-400 mt-1"></p>
           </div>
         </div>
         <div class="flex justify-end">
@@ -116,6 +117,7 @@ function filtrar(status) {
 const STATUS_BADGE = {
   orcamento:                    'bg-gray-100 text-gray-600',
   aguardando_aprovacao_credito: 'bg-yellow-100 text-yellow-700',
+  aguardando_estoque:           'bg-orange-100 text-orange-700',
   aprovado:                     'bg-green-100 text-green-700',
   em_separacao:                 'bg-blue-100 text-blue-700',
   enviado:                      'bg-indigo-100 text-indigo-700',
@@ -124,7 +126,8 @@ const STATUS_BADGE = {
 };
 const STATUS_LABEL = {
   orcamento:                    'Orçamento',
-  aguardando_aprovacao_credito: 'Aguard. Aprovação',
+  aguardando_aprovacao_credito: 'Aguard. Crédito',
+  aguardando_estoque:           'Aguard. Estoque',
   aprovado:                     'Aprovado',
   em_separacao:                 'Em Separação',
   enviado:                      'Enviado',
@@ -146,7 +149,7 @@ function renderTabela() {
   }
 
   const podeEditar = ['admin', 'representante'].includes((_usuario.perfil?.nome ?? _usuario.perfil ?? '').toLowerCase());
-  const podeCancelar = ['orcamento', 'aguardando_aprovacao_credito'];
+  const podeCancelar = ['orcamento', 'aguardando_aprovacao_credito', 'aguardando_estoque'];
 
   tbody.innerHTML = lista.map(p => {
     const empresa = p.cliente?.razao_social ?? '—';
@@ -364,12 +367,32 @@ function _preencherSelectGrades(pedido) {
   const sel = document.getElementById('f-grade');
   const grades = _produtos.flatMap(p =>
     (p.grades ?? []).map(g => ({
-      id:    g.id,
-      label: `${p.nome} — ${g.sku}${g.tamanho ? ' / ' + g.tamanho : ''}${g.cor ? ' / ' + g.cor : ''}`,
+      id:        g.id,
+      produto_id: p.id,
+      label:     `${p.nome} — ${g.sku}${g.tamanho ? ' / ' + g.tamanho : ''}${g.cor ? ' / ' + g.cor : ''}`,
     }))
   );
   sel.innerHTML = '<option value="">Selecione…</option>' +
-    grades.map(g => `<option value="${g.id}">${g.label}</option>`).join('');
+    grades.map(g => `<option value="${g.id}" data-produto="${g.produto_id}">${g.label}</option>`).join('');
+
+  sel.onchange = async () => {
+    const opt = sel.selectedOptions[0];
+    const produtoId = opt?.dataset?.produto;
+    const hintEl = document.getElementById('volume-hint');
+    if (hintEl) hintEl.textContent = '';
+    document.getElementById('f-preco').value = '';
+    if (!produtoId) return;
+
+    try {
+      const precos = await Api.get(`/produtos/${produtoId}/precos`);
+      if (precos.length > 0) {
+        document.getElementById('f-preco').value = precos[0].preco;
+        if (precos[0].tabela?.regra_volume_minimo > 1 && hintEl) {
+          hintEl.textContent = `Vol. mín.: ${precos[0].tabela.regra_volume_minimo} un. (${precos[0].tabela.nome})`;
+        }
+      }
+    } catch (_) {}
+  };
 }
 
 document.getElementById('form-item').addEventListener('submit', async (ev) => {
@@ -418,7 +441,9 @@ async function confirmarOrcamento() {
     _pedidos = await Api.get('/pedidos');
     renderTabela();
     if (pedido.status === 'aguardando_aprovacao_credito') {
-      showAlert('Pedido enviado para aprovação de crédito.', 'success');
+      showAlert('Limite de crédito excedido — pedido enviado para aprovação financeira.', 'success');
+    } else if (pedido.status === 'aguardando_estoque') {
+      showAlert('Estoque insuficiente — pedido ficará na fila até o estoque ser reposto.', 'success');
     } else {
       showAlert('Pedido aprovado com sucesso.', 'success');
     }

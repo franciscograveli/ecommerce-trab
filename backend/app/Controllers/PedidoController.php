@@ -9,6 +9,7 @@ use App\Models\Cliente;
 use App\Models\Estoque;
 use App\Models\Representante;
 use App\Models\Comissao;
+use App\Models\ProdutoPreco;
 use App\Models\Perfil;
 use App\Middleware\Auth;
 
@@ -96,7 +97,7 @@ class PedidoController
         if (!$pedido) json(['erro' => 'Pedido não encontrado'], 404);
 
         $body = bodyParams();
-        $statusValidos = ['orcamento', 'aguardando_aprovacao_credito', 'aprovado', 'em_separacao', 'enviado', 'entregue', 'cancelado'];
+        $statusValidos = ['orcamento', 'aguardando_aprovacao_credito', 'aguardando_estoque', 'aprovado', 'em_separacao', 'enviado', 'entregue', 'cancelado'];
 
         if (!empty($body['status']) && !in_array($body['status'], $statusValidos)) {
             json(['erro' => 'Status inválido'], 422);
@@ -107,6 +108,12 @@ class PedidoController
                 $cliente = Cliente::find($pedido->cliente_id);
                 if ($cliente && $pedido->valor_total > $cliente->limite_credito) {
                     $pedido->status = 'aguardando_aprovacao_credito';
+                    $pedido->save();
+                    json($pedido->toArray());
+                }
+
+                if (!$this->estoqueDisponivel($pedido)) {
+                    $pedido->status = 'aguardando_estoque';
                     $pedido->save();
                     json($pedido->toArray());
                 }
@@ -168,7 +175,20 @@ class PedidoController
             json(['erro' => 'Preço unitário não pode ser negativo'], 422);
         }
 
-        if (!Grade::find($body['grade_id'])) json(['erro' => 'Grade não encontrada'], 404);
+        $grade = Grade::with('produto')->find($body['grade_id']);
+        if (!$grade) json(['erro' => 'Grade não encontrada'], 404);
+
+        $produtoPreco = ProdutoPreco::with('tabelaPreco')
+            ->where('produto_id', $grade->produto_id)
+            ->whereRaw('ABS(preco - ?) < 0.01', [(float) $body['preco_unitario']])
+            ->first();
+
+        if ($produtoPreco && $produtoPreco->tabelaPreco) {
+            $volMin = (int) ($produtoPreco->tabelaPreco->regra_volume_minimo ?? 1);
+            if ((int) $body['quantidade'] < $volMin) {
+                json(['erro' => "Quantidade mínima para esta tabela de preço é {$volMin} unidade(s)"], 422);
+            }
+        }
 
         $item = PedidoItem::create([
             'pedido_id'      => $params['id'],
@@ -206,18 +226,23 @@ class PedidoController
         $pedido->save();
     }
 
+    private function estoqueDisponivel(Pedido $pedido): bool
+    {
+        foreach ($pedido->itens()->get() as $item) {
+            $total = Estoque::where('grade_id', $item->grade_id)->sum('quantidade');
+            if ($total < $item->quantidade) return false;
+        }
+        return true;
+    }
+
     private function validarEstoque(Pedido $pedido): void
     {
-        $itens = $pedido->itens()->get();
-
-        foreach ($itens as $item) {
-            $totalEmEstoque = Estoque::where('grade_id', $item->grade_id)
-                ->sum('quantidade');
-
+        foreach ($pedido->itens()->get() as $item) {
+            $totalEmEstoque = Estoque::where('grade_id', $item->grade_id)->sum('quantidade');
             if ($totalEmEstoque < $item->quantidade) {
                 json([
-                    'erro'    => 'Estoque insuficiente para aprovação do pedido',
-                    'grade_id'=> $item->grade_id,
+                    'erro'       => 'Estoque insuficiente para aprovação do pedido',
+                    'grade_id'   => $item->grade_id,
                     'disponivel' => $totalEmEstoque,
                     'necessario' => $item->quantidade,
                 ], 422);
