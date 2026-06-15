@@ -7,7 +7,13 @@ Modal.build('modal-pedido', {
     <form id="form-pedido" class="flex flex-col gap-4">
       <div id="f-empresa-wrap">
         <label class="${Modal.LABEL}">Empresa *</label>
-        <select id="f-empresa" required class="${Modal.SELECT}">
+        <select id="f-empresa" required class="${Modal.SELECT}" onchange="carregarCompradores(this.value)">
+          <option value="">Selecione…</option>
+        </select>
+      </div>
+      <div id="f-comprador-wrap" class="hidden">
+        <label class="${Modal.LABEL}">Comprador *</label>
+        <select id="f-comprador" class="${Modal.SELECT}">
           <option value="">Selecione…</option>
         </select>
       </div>
@@ -199,8 +205,37 @@ function _preencherSelectEmpresas() {
     _empresas.map(e => `<option value="${e.id}">${e.razao_social}</option>`).join('');
 }
 
+async function carregarCompradores(clienteId) {
+  const wrap = document.getElementById('f-comprador-wrap');
+  const sel  = document.getElementById('f-comprador');
+  const perfil = (_usuario.perfil?.nome ?? _usuario.perfil ?? '').toLowerCase();
+
+  if (!clienteId || perfil === 'comprador') {
+    wrap.classList.add('hidden');
+    return;
+  }
+
+  sel.innerHTML = '<option value="">Carregando…</option>';
+  wrap.classList.remove('hidden');
+
+  try {
+    const empresa = await Api.get(`/empresas/${clienteId}`);
+    const compradores = empresa.compradores ?? [];
+    if (compradores.length === 0) {
+      sel.innerHTML = '<option value="">Nenhum comprador cadastrado</option>';
+    } else {
+      sel.innerHTML = '<option value="">Selecione…</option>' +
+        compradores.map(c => `<option value="${c.id}">${c.usuario?.nome ?? `Comprador #${c.id}`}</option>`).join('');
+    }
+  } catch {
+    sel.innerHTML = '<option value="">Erro ao carregar</option>';
+  }
+}
+
 function openModalPedido() {
   document.getElementById('form-pedido').reset();
+  document.getElementById('f-comprador-wrap').classList.add('hidden');
+  document.getElementById('f-comprador').innerHTML = '<option value="">Selecione…</option>';
   Modal.open('modal-pedido');
 }
 
@@ -215,9 +250,17 @@ document.getElementById('form-pedido').addEventListener('submit', async (ev) => 
     return;
   }
 
+  const compradorId = _usuario.comprador?.id
+    ?? (parseInt(document.getElementById('f-comprador')?.value) || null);
+
+  if (!compradorId) {
+    showAlert('Selecione um comprador.', 'error');
+    return;
+  }
+
   const body = {
     cliente_id:   resolvedClienteId,
-    comprador_id: _usuario.comprador?.id ?? 1,
+    comprador_id: compradorId,
   };
 
   btn.disabled = true;
