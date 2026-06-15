@@ -116,7 +116,7 @@ CREATE TABLE pedidos (
     cliente_id INT NOT NULL,
     comprador_id INT NOT NULL,
     representante_id INT,
-    status ENUM('orcamento', 'aguardando_aprovacao_credito', 'aprovado', 'em_separacao', 'enviado', 'entregue', 'cancelado') DEFAULT 'orcamento',
+    status ENUM('orcamento', 'aguardando_aprovacao_credito', 'aguardando_estoque', 'aprovado', 'em_separacao', 'enviado', 'entregue', 'cancelado') DEFAULT 'orcamento',
     valor_total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
