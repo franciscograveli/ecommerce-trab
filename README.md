@@ -11,12 +11,24 @@ Plataforma de e-commerce B2B (business-to-business) voltada para venda no atacad
 
 ---
 
+## Documentos entregáveis
+
+| Arquivo | Descrição |
+|---|---|
+| `docs/Trabalho__IFSUDESTEMG.zip` | Documento de requisitos do projeto |
+| `docs/EER.pdf` | Diagrama Entidade-Relacionamento |
+| `docs/EER.png` | Diagrama ER em imagem |
+| `database/EER.mwb` | Fonte do diagrama ER |
+| `database/schema.sql` | Script DDL completo do banco de dados |
+
+---
+
 ## O que precisa ser entregue (checklist)
 
 - [x] Script DDL `.sql` com a estrutura completa do banco (`database/schema.sql`)
 - [x] Diagrama Entidade-Relacionamento (`database/EER.mwb` + `docs/EER.pdf`)
 - [x] Projeto completo (código + interfaces + lógica de negócio)
-- [x] Documentação do projeto (modelo fornecido pelo professor)
+- [x] Documentação do projeto (`docs/Trabalho__IFSUDESTEMG.zip`)
 - [x] Link para este repositório no GitHub
 
 > **Atenção:** Entrega via SIGAA. Não atualizar o repositório após a data de entrega.
