@@ -15,7 +15,10 @@ form.addEventListener('submit', async (e) => {
     });
 
     Api.setToken(res.token);
-    localStorage.setItem('usuario', JSON.stringify(res.usuario));
+    const usuario = { ...res.usuario };
+    if (res.comprador)     usuario.comprador     = res.comprador;
+    if (res.representante) usuario.representante = res.representante;
+    localStorage.setItem('usuario', JSON.stringify(usuario));
 
     const perfil = (res.usuario.perfil?.nome ?? res.usuario.perfil ?? '').toLowerCase();
     window.location.href = perfil === 'comprador'

@@ -26,6 +26,11 @@ class PedidoController
             $query->whereHas('cliente', fn($q) => $q->where('representante_id', $repId));
         }
 
+        if (($usuario['perfil']['nome'] ?? null) === Perfil::COMPRADOR) {
+            $clienteId = $usuario['comprador']['cliente_id'] ?? null;
+            $query->where('cliente_id', $clienteId);
+        }
+
         if (!empty($_GET['status']))     $query->where('status', $_GET['status']);
         if (!empty($_GET['cliente_id'])) $query->where('cliente_id', $_GET['cliente_id']);
 
