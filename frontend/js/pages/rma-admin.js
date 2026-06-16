@@ -136,35 +136,41 @@ async function openAnalise(id) {
     document.getElementById('d-tipo').textContent    = rma.tipo;
     document.getElementById('d-motivo').textContent  = rma.motivo;
 
-    const divAcoes = document.getElementById('acoes-status');
+    const divAcoes   = document.getElementById('acoes-status');
+    const _usuario   = JSON.parse(localStorage.getItem('usuario') || '{}');
+    const perfil     = (_usuario.perfil?.nome ?? _usuario.perfil ?? '').toLowerCase();
     divAcoes.innerHTML = '';
 
-    const transicoes = {
-      aberto:     ['em_analise', 'rejeitado'],
-      em_analise: ['aprovado', 'rejeitado'],
-      aprovado:   ['concluido'],
-    };
-
-    const labels = {
-      em_analise: ['Iniciar Análise', 'bg-yellow-600 hover:bg-yellow-500'],
-      aprovado:   ['Aprovar',        'bg-green-700 hover:bg-green-600'],
-      rejeitado:  ['Rejeitar',       'bg-red-700 hover:bg-red-600'],
-      concluido:  ['Concluir (Gera Estoque)', 'bg-emerald-700 hover:bg-emerald-600'],
-    };
-
-    const proximos = transicoes[rma.status] ?? [];
-    
-    if (proximos.length === 0) {
-      divAcoes.innerHTML = '<p class="text-brand-tan italic col-span-2">Nenhuma ação disponível para este status.</p>';
+    if (perfil === 'representante') {
+      divAcoes.innerHTML = '<p class="text-brand-tan italic col-span-2 text-[11px]">Visualização apenas — alterações de status são realizadas pelo administrador.</p>';
     } else {
-      proximos.forEach(status => {
-        const [label, cls] = labels[status];
-        divAcoes.innerHTML += `
-          <button onclick="atualizarStatus(${rma.id}, '${status}')"
-            class="px-3 py-2 rounded-lg text-white text-[10px] font-bold uppercase transition-colors ${cls}">
-            ${label}
-          </button>`;
-      });
+      const transicoes = {
+        aberto:     ['em_analise', 'rejeitado'],
+        em_analise: ['aprovado', 'rejeitado'],
+        aprovado:   ['concluido'],
+      };
+
+      const labels = {
+        em_analise: ['Iniciar Análise', 'bg-yellow-600 hover:bg-yellow-500'],
+        aprovado:   ['Aprovar',        'bg-green-700 hover:bg-green-600'],
+        rejeitado:  ['Rejeitar',       'bg-red-700 hover:bg-red-600'],
+        concluido:  ['Concluir (Gera Estoque)', 'bg-emerald-700 hover:bg-emerald-600'],
+      };
+
+      const proximos = transicoes[rma.status] ?? [];
+
+      if (proximos.length === 0) {
+        divAcoes.innerHTML = '<p class="text-brand-tan italic col-span-2">Nenhuma ação disponível para este status.</p>';
+      } else {
+        proximos.forEach(status => {
+          const [label, cls] = labels[status];
+          divAcoes.innerHTML += `
+            <button onclick="atualizarStatus(${rma.id}, '${status}')"
+              class="px-3 py-2 rounded-lg text-white text-[10px] font-bold uppercase transition-colors ${cls}">
+              ${label}
+            </button>`;
+        });
+      }
     }
 
     Modal.open('modal-rma-analise');
