@@ -63,6 +63,7 @@ make logs          # acompanhar logs em tempo real
 make shell-backend # abrir bash no container PHP
 make shell-db      # abrir cliente MariaDB
 make db-reset      # recriar o banco do zero (apaga dados!)
+make test          # rodar os testes da API (requer containers no ar)
 make down          # derrubar os containers
 ```
 
@@ -175,6 +176,7 @@ ecommerce-trab/
 │   └── EER.mwb              # Diagrama ER (MySQL Workbench)
 │
 ├── docs/
+│   ├── Trabalho__IFSUDESTEMG.zip  # Documento de requisitos do projeto
 │   ├── EER.pdf              # Diagrama ER exportado
 │   └── EER.png              # Diagrama ER (imagem)
 │
