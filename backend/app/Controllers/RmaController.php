@@ -12,7 +12,13 @@ class RmaController
 {
     public function index(array $params): void
     {
-        $query = RmaSolicitacao::with(['pedido.cliente', 'comprador.usuario']);
+        $usuario = Auth::handle();
+        $query   = RmaSolicitacao::with(['pedido.cliente', 'comprador.usuario']);
+
+        if (($usuario['perfil']['nome'] ?? null) === Perfil::COMPRADOR) {
+            $compradorId = $usuario['comprador']['id'] ?? null;
+            $query->where('comprador_id', $compradorId);
+        }
 
         if (!empty($_GET['status']))       $query->where('status', $_GET['status']);
         if (!empty($_GET['comprador_id'])) $query->where('comprador_id', $_GET['comprador_id']);

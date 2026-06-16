@@ -86,15 +86,10 @@ const _usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
 async function init() {
   const perfil = (_usuario.perfil?.nome ?? _usuario.perfil ?? '').toLowerCase();
 
-  // Comprador não cria orçamento diretamente nesta tela
-  if (perfil === 'comprador') {
-    document.getElementById('btn-novo').classList.add('hidden');
-  }
-
   try {
     const [pedidos, empresas, produtos, rmas] = await Promise.all([
       Api.get('/pedidos'),
-      perfil !== 'comprador' ? Api.get('/empresas') : Promise.resolve([]),
+      perfil !== 'comprador' ? Api.get('/empresas') : Api.get(`/empresas/${_usuario.comprador?.cliente_id}`).then(e => [e]),
       Api.get('/produtos'),
       Api.get('/rma'),
     ]);
@@ -206,10 +201,15 @@ function renderTabela() {
 
 // ── Modal criar orçamento ──────────────────────────────────────────
 function _preencherSelectEmpresas() {
-  const sel = document.getElementById('f-empresa');
+  const sel    = document.getElementById('f-empresa');
   if (!sel) return;
+  const perfil = (_usuario.perfil?.nome ?? _usuario.perfil ?? '').toLowerCase();
   sel.innerHTML = '<option value="">Selecione…</option>' +
     _empresas.map(e => `<option value="${e.id}">${e.razao_social}</option>`).join('');
+  if (perfil === 'comprador' && _usuario.comprador?.cliente_id) {
+    sel.value    = _usuario.comprador.cliente_id;
+    sel.disabled = true;
+  }
 }
 
 async function carregarCompradores(clienteId) {
@@ -243,6 +243,10 @@ function openModalPedido() {
   document.getElementById('form-pedido').reset();
   document.getElementById('f-comprador-wrap').classList.add('hidden');
   document.getElementById('f-comprador').innerHTML = '<option value="">Selecione…</option>';
+  const perfil = (_usuario.perfil?.nome ?? _usuario.perfil ?? '').toLowerCase();
+  if (perfil === 'comprador' && _usuario.comprador?.cliente_id) {
+    document.getElementById('f-empresa').value = _usuario.comprador.cliente_id;
+  }
   Modal.open('modal-pedido');
 }
 

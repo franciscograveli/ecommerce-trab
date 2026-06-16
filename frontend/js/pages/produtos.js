@@ -381,6 +381,9 @@ async function renderPrecos() {
   try {
     const precos = await Api.get(`/produtos/${_precoProdutoId}/precos`);
 
+    const formPreco = document.getElementById('form-preco');
+    formPreco.classList.toggle('hidden', precos.length > 0);
+
     if (precos.length === 0) {
       lista.innerHTML = '<p class="text-gray-400 text-xs">Nenhum preço definido.</p>';
       return;

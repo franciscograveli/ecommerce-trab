@@ -157,6 +157,13 @@ class ProdutoController
             if (!isset($body[$campo])) json(['erro' => "Campo '{$campo}' é obrigatório"], 422);
         }
 
+        $jaExiste = ProdutoPreco::where('produto_id', $params['id'])
+            ->where('tabela_preco_id', '!=', $body['tabela_preco_id'])
+            ->exists();
+        if ($jaExiste) {
+            json(['erro' => 'Este produto já possui um preço definido. Remova-o antes de adicionar outro.'], 422);
+        }
+
         $preco = ProdutoPreco::updateOrCreate(
             ['produto_id' => $params['id'], 'tabela_preco_id' => $body['tabela_preco_id']],
             ['preco' => $body['preco']]
