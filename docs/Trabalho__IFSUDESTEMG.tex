@@ -1,0 +1,423 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage[a4paper, top=3cm, bottom=2cm, left=3cm, right=2cm]{geometry}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{setspace}
+\usepackage{hyperref}
+\hypersetup{hidelinks}
+\usepackage{parskip}
+
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+\setlength{\parindent}{0pt}
+\onehalfspacing
+
+\begin{document}
+
+% ─── Capa ────────────────────────────────────────────────────────────────────
+\begin{titlepage}
+  \centering
+  \vspace*{1cm}
+  {\large
+    INSTITUTO FEDERAL DE EDUCAÇÃO, CIÊNCIA E TECNOLOGIA DO SUDESTE DE MINAS GERAIS
+    -- \textit{CAMPUS} MURIAÉ\\[4pt]
+    GESTÃO DA TECNOLOGIA DA INFORMAÇÃO
+  }\par
+  \vspace{3cm}
+  {\large
+    Francisco Carlos de Assis Santos Júnior\\
+    Luan Souza Cunha\\
+    Igor Soares Rosa
+  }\par
+  \vfill
+  {\Large\bfseries
+    B2B ATACADO:\\[6pt]
+    Desenvolvimento de uma Plataforma de E-commerce B2B
+  }\par
+  \vfill
+  {Muriaé -- MG\\2026}\par
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ─── 1. Introdução ───────────────────────────────────────────────────────────
+\section{INTRODUÇÃO}
+
+Este documento de requisitos tem como objetivo definir as funcionalidades e regras de negócio da plataforma de E-commerce B2B Atacadista. Ele servirá como guia central para o desenvolvimento, detalhando os fluxos de vendas corporativas, aprovação de crédito, gestão de carteiras e logística.
+
+\subsection{Público-Alvo}
+
+\begin{enumerate}
+  \item \textbf{Equipe de Desenvolvimento:}
+    \begin{itemize}
+      \item \textbf{Desenvolvedores Full-Stack:} Francisco Carlos de Assis Santos Júnior, Luan Souza Cunha.
+      \item \textbf{Desenvolvedor Front-end:} Igor Soares Rosa.
+    \end{itemize}
+
+  \item \textbf{Gestores de Projeto:} Francisco Carlos de Assis Santos Júnior.
+
+  \item \textbf{Clientes e Usuários Finais:}
+    \begin{itemize}
+      \item \textbf{Representantes Comerciais:} Utilizam a plataforma para gerenciar seus clientes e lançar orçamentos de venda.
+      \item \textbf{Compradores Corporativos (Clientes):} Acessam o portal B2B para acompanhar os pedidos de suas empresas e emitir segundas vias de boletos.
+      \item \textbf{Operadores de Logística e Expedição:} Responsáveis por atualizar os status do fluxo de separação e despacho de mercadorias no estoque.
+    \end{itemize}
+
+  \item \textbf{Stakeholders:}
+    \begin{itemize}
+      \item \textbf{Representantes Comerciais:} Operam o sistema para montar orçamentos, consultar o estoque e fechar vendas, com acesso restrito apenas à sua própria carteira de clientes.
+      \item \textbf{Compradores Corporativos (Clientes B2B):} Acessam o portal para verificar o andamento das compras, baixar segundas vias de boletos e abrir solicitações de devolução (RMA).
+      \item \textbf{Equipe de Logística:} Utiliza a plataforma para registrar o avanço das mercadorias no estoque e preencher manualmente os dados de frete e rastreio.
+    \end{itemize}
+\end{enumerate}
+
+% ─── 2. Descrição Geral do Produto ───────────────────────────────────────────
+\section{DESCRIÇÃO GERAL DO PRODUTO}
+
+\subsection{Descrição do Cliente}
+
+Durante o processo de levantamento de requisitos, foi identificado que a empresa atacadista atualmente realiza o controle de vendas corporativas de forma manual, utilizando planilhas eletrônicas. Essa abordagem tem se mostrado limitada frente às necessidades crescentes de agilidade comercial, controle de estoque e escalabilidade nas vendas B2B. Por esse motivo, o cliente manifestou interesse na adoção de um sistema de vendas online que modernize e otimize a operação tanto para a equipe de representantes comerciais quanto para as empresas compradoras.
+
+Para atender a essa demanda, o sistema deve oferecer uma plataforma corporativa de fácil utilização que permita o cadastro ágil e seguro de empresas clientes (via CNPJ) e de seus compradores autorizados. O cliente demonstrou forte preocupação com o sigilo comercial, exigindo total privacidade para que cada representante acesse estritamente os clientes, pedidos e comissões de sua própria carteira.
+
+Além de permitir aos representantes navegar por um catálogo com variações físicas de produtos (cor e tamanho, por exemplo) e consultar o estoque em tempo real para fechar vendas e negociar preços, a plataforma deve automatizar as regras comerciais, financeiras e pós-venda. Isso inclui aplicar um bloqueio de pedidos acima do limite de crédito do cliente, realizar a baixa de estoque e o cálculo de comissões na aprovação, fornecer o registro manual do fluxo de expedição (etapas de separação, embalagem, frete e rastreio) e disponibilizar um ``Portal do Cliente'' para consulta de histórico, emissão de boletos e abertura de solicitações de troca e devolução.
+
+Aqui estão as principais funcionalidades desejadas para o sistema de pedidos online, com base nos requisitos de usuário:
+
+\begin{itemize}
+  \item \textbf{Cadastro corporativo com validação:} Permitir o registro de empresas clientes com validação de dados essenciais (CNPJ, Inscrição Estadual) e a inclusão de seus compradores autorizados.
+  \item \textbf{Sigilo de carteira comercial:} Garantir que cada representante visualize e gerencie exclusivamente as empresas e orçamentos vinculados à sua própria carteira de atuação.
+  \item \textbf{Navegação de catálogo e estoque:} Facilitar a navegação pelo catálogo de produtos, permitindo a escolha de variações (cores e tamanhos) e a visualização clara da disponibilidade em múltiplos depósitos.
+  \item \textbf{Criação ágil de orçamentos:} Capacitar os representantes a elaborarem orçamentos, definirem os preços negociados na ponta da venda e converterem essas propostas em pedidos efetivos.
+  \item \textbf{Trava de risco de crédito:} Bloquear automaticamente a liberação de pedidos caso o valor total da compra exceda o limite de crédito disponível para o cliente.
+  \item \textbf{Controle de expedição logística:} Implementar um acompanhamento das etapas internas de entrega (separação, embalagem, pronto para envio) e o registro de rastreios.
+  \item \textbf{Gestão automatizada de vendas:} Realizar a baixa automática do estoque e o cálculo das comissões do vendedor no exato momento em que o pedido é aprovado.
+  \item \textbf{Portal do Cliente B2B:} Fornecer um ambiente exclusivo para que as empresas compradoras possam consultar o histórico de seus pedidos e realizar o download de boletos faturados.
+  \item \textbf{Módulo de trocas e devoluções:} Permitir que os clientes abram chamados para devolução ou troca de mercadorias danificadas diretamente pelo portal de pós-venda.
+  \item \textbf{Segurança e confidencialidade:} A integridade das negociações é uma prioridade, garantindo que as informações comerciais e financeiras sejam protegidas contra acessos não autorizados.
+\end{itemize}
+
+\subsection{Descrição Geral do Produto}
+
+O sistema desenvolvido é uma plataforma de \textbf{E-commerce B2B (Atacado)} projetada para otimizar e centralizar o fluxo de vendas corporativas faturadas. O objetivo do sistema é fornecer uma estrutura eficiente para que representantes comerciais gerenciem suas carteiras e emitam orçamentos, ao mesmo tempo em que disponibiliza um canal exclusivo para que empresas compradoras acompanhem seus pedidos, acessem faturas e controlem suas solicitações de troca ou devolução.
+
+\subsubsection{Situação Atual da Empresa}
+
+A empresa enfrentava desafios significativos em seu processo de vendas em atacado devido à descentralização de dados e à falta de uma ferramenta integrada. Abaixo estão os principais pontos que caracterizavam a situação anterior à implementação do sistema:
+
+\paragraph*{Processo Manual de Vendas}
+\begin{itemize}
+  \item Registro manual de orçamentos e pedidos por meio de blocos de papel ou e-mails, gerando riscos de erros de digitação e retrabalho.
+  \item Lentidão no fluxo de fechamento de vendas devido à necessidade de preenchimento manual de tabelas e documentos.
+  \item Dependência de planilhas isoladas para o cálculo manual de comissões e verificação de regras comerciais.
+\end{itemize}
+
+\paragraph*{Limitações na Visibilidade de Estoque}
+\begin{itemize}
+  \item Dificuldade em consultar o saldo real de produtos devido à fragmentação física das mercadorias entre múltiplos depósitos.
+  \item Falta de atualização imediata das quantidades físicas após a conclusão de uma venda, gerando o risco de vender itens indisponíveis na grade.
+\end{itemize}
+
+\paragraph*{Vulnerabilidade na Análise de Risco e Crédito}
+\begin{itemize}
+  \item Inexistência de travas automáticas para o controle de risco financeiro no momento da venda.
+  \item Necessidade de consulta manual aos limites de crédito de cada pessoa jurídica, o que tornava o processo de aprovação de pedidos lento e passível de inadimplência.
+\end{itemize}
+
+\paragraph*{Exposição do Preço Comercial}
+\begin{itemize}
+  \item Falta de controle rígido sobre os valores praticados, com o risco de aplicação de preços arbitrários e sem validação centralizada em negociações de volume ou região.
+  \item Insegurança no tráfego de dados, permitindo margem para manipulações de valores diretamente na ponta do atendimento.
+\end{itemize}
+
+\paragraph*{Ruído no Fluxo Logístico e de Expedição}
+\begin{itemize}
+  \item Falta de um fluxo de status padronizado para as etapas internas de movimentação e conferência de mercadorias (separação e embalagem).
+  \item Processo totalmente manual e descentralizado para o registro de custos de frete e códigos de rastreamento das transportadoras terceiras.
+\end{itemize}
+
+\paragraph*{Ausência de Canal de Autoverificação para o Cliente (Pós-Venda)}
+\begin{itemize}
+  \item Sobrecarga no setor de atendimento para responder a dúvidas rotineiras dos compradores sobre o andamento de pedidos e envio de segundas vias de boletos bancários.
+  \item Lentidão e falta de rastreabilidade na abertura e condução de processos de trocas ou devoluções de mercadorias.
+\end{itemize}
+
+\subsubsection{Escopo do Produto -- Módulos e Funcionalidades}
+
+\paragraph*{Módulo de Acesso e Gestão de Usuários}
+
+\begin{table}[h!]
+  \centering
+  \begin{tabularx}{\textwidth}{>{\bfseries}X X}
+    \toprule
+    Funcionalidades & Descrição \\
+    \midrule
+    Autenticação via token &
+      Login com e-mail e senha; geração de Bearer token com validade de sessão. \\
+    \addlinespace
+    Controle de perfis &
+      Três perfis distintos: Administrador, Representante e Comprador, cada um com permissões específicas dos endpoints da API. \\
+    \addlinespace
+    Cadastro de representantes &
+      Registro do representante com percentual de comissão e vínculo à sua carteira de clientes. \\
+    \addlinespace
+    Cadastro de compradores &
+      Vínculo de usuários compradores a empresas clientes, com acesso restrito ao portal da própria empresa. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Módulo de Acesso e Gestão de Usuários}
+\end{table}
+
+\paragraph*{Módulo Comercial (Produtos, Preços e Pedidos)}
+
+\begin{table}[h!]
+  \centering
+  \begin{tabularx}{\textwidth}{>{\bfseries}X X}
+    \toprule
+    Funcionalidades & Descrição \\
+    \midrule
+    Catálogo de produtos com grades &
+      Produtos organizados em grades de variação (cor e tamanho), cada variação com SKU único. \\
+    \addlinespace
+    Tabelas de preço por volume/região &
+      Preços definidos por tabela, com regras de volume mínimo e segmentação por região geográfica. \\
+    \addlinespace
+    Criação de orçamentos &
+      Representante ou comprador monta o pedido selecionando grades e informando o preço unitário negociado. \\
+    \addlinespace
+    Ciclo de vida do pedido &
+      Status sequenciais: orçamento -- aguardando aprovação de crédito -- aprovado -- em separação -- enviado -- entregue -- cancelado. \\
+    \addlinespace
+    Bloqueio por limite de crédito &
+      Pedidos que ultrapassam o limite cadastrado da empresa são automaticamente redirecionados para fila de aprovação do administrador. \\
+    \addlinespace
+    Baixa automática de estoque &
+      Na aprovação do pedido, o estoque é decrementado por grade e depósito, consumindo primeiro o depósito com maior saldo. \\
+    \addlinespace
+    Geração automática de comissão &
+      No momento da aprovação, o sistema calcula e registra a comissão do representante com base no percentual fixo do seu perfil. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Módulo Comercial}
+\end{table}
+
+\paragraph*{Módulo de Estoque e Expedição}
+
+O sistema de gestão proporcionará um painel de controle robusto para atacadistas gerenciarem sua logística. Com funcionalidades como rastreamento de expedição e múltiplos depósitos, emissão de boletos financeiros, controle de carteiras comerciais, histórico de pedidos B2B, além de automação de devoluções (RMA) e baixa FIFO.
+
+\begin{table}[h!]
+  \centering
+  \begin{tabularx}{\textwidth}{>{\bfseries}X X}
+    \toprule
+    Funcionalidades & Descrição \\
+    \midrule
+    Estoque multi-depósito &
+      Saldo controlado por grade (cor/tamanho) e por depósito físico, com ajustes manuais de entrada e saída. \\
+    \addlinespace
+    Fluxo de expedição logística &
+      Etapas registradas manualmente: picking pendente -- picking concluído -- packing -- pronto para envio -- em trânsito. \\
+    \addlinespace
+    Registro de frete e rastreio &
+      Campos para transportadora, código de rastreio e valor de frete preenchidos pelo operador. \\
+    \addlinespace
+    Emissão de boletos &
+      Boletos vinculados à expedição com linha digitável, URL do PDF e data de vencimento. \\
+    \addlinespace
+    Módulo de trocas e devoluções &
+      Comprador abre solicitação de troca ou devolução para pedidos enviados/entregues; fluxo de estados: aberto -- em análise -- aprovado -- concluído/rejeitado. \\
+    \addlinespace
+    Reposição de estoque por devolução &
+      Ao concluir uma devolução, o sistema repõe automaticamente a quantidade ao estoque da grade correspondente. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Módulo de Estoque e Expedição}
+\end{table}
+
+\subsection{Premissas}
+
+\paragraph*{Conectividade de Rede Estável}
+\begin{itemize}
+  \item Para utilizar o sistema é necessário acesso à internet para acessar a aplicação web.
+\end{itemize}
+
+\paragraph*{Equipamentos Compatíveis}
+\begin{itemize}
+  \item Os usuários devem possuir dispositivos compatíveis, como computadores, tablets ou smartphones, para acessar o sistema.
+\end{itemize}
+
+\paragraph*{Treinamento dos Usuários}
+\begin{itemize}
+  \item Os usuários serão treinados no uso do sistema antes de sua implantação para garantir uma transição suave e eficaz.
+\end{itemize}
+
+\paragraph*{Atualizações de Segurança}
+\begin{itemize}
+  \item O sistema receberá atualizações regulares de segurança para garantir a proteção contínua dos dados contra ameaças cibernéticas.
+\end{itemize}
+
+\paragraph*{Colaboração dos Usuários}
+\begin{itemize}
+  \item É esperado que os usuários colaborem ativamente no uso do sistema, fornecendo feedback e reportando quaisquer problemas encontrados durante o uso.
+\end{itemize}
+
+\paragraph*{Fornecimento Direto de Informações (Preço e Frete)}
+\begin{itemize}
+  \item O sistema assume como premissa operacional que os valores de frete, códigos de rastreamento de transporte e preços unitários negociados sejam inseridos manualmente pelos usuários.
+\end{itemize}
+
+% ─── 3. Requisitos ───────────────────────────────────────────────────────────
+\section{REQUISITOS}
+
+\subsection{Requisitos Funcionais}
+
+\paragraph*{RF01 -- Cadastro de Clientes e Compradores}
+O sistema deve permitir o cadastro de clientes corporativos (empresas) registrando o CNPJ e a Inscrição Estadual, além de permitir o vínculo de seus respectivos compradores.
+
+\paragraph*{RF02 -- Privacidade de Clientes por Vendedor}
+O sistema deve garantir o isolamento horizontal das carteiras, restringindo a visibilidade para que cada representante acesse estritamente os clientes, pedidos e comissões vinculados ao seu próprio ID.
+
+\paragraph*{RF03 -- Catálogo de Produtos com Variações}
+O sistema deve manter um catálogo de produtos integrado a uma estrutura de grades de variação baseada em atributos fixos definidos no banco de dados.
+
+\paragraph*{RF04 -- Registro de Preços Combinados na Venda}
+O sistema deve manter tabelas de preços e de regiões cadastradas, aceitando o registro de pedidos com os valores unitários enviados a partir da interface (frontend) no momento da montagem do orçamento.
+
+\paragraph*{RF05 -- Controle de Estoque por Galpão}
+O sistema deve permitir a validação e o abatimento de estoque cruzando a grade específica do produto vendido.
+
+\paragraph*{RF06 -- Mudança de Status do Pedido}
+O sistema deve processar o ciclo de vida do pedido iniciando sempre como ``orçamento'', possuindo gatilhos automáticos que realizam a baixa de estoque e a geração de comissões no momento em que o status muda para ``aprovado''.
+
+\paragraph*{RF07 -- Bloqueio de Venda por Falta de Crédito}
+No momento da aprovação do pedido, o backend deve validar se o valor total do pedido excede o limite de crédito cadastrado para o cliente. Caso o limite seja ultrapassado, o sistema deve interceptar a operação, impedindo a baixa de estoque e a geração de comissão.
+
+\paragraph*{RF08 -- Acompanhamento das Etapas de Envio}
+O sistema deve permitir o controle gerencial das etapas de expedição por meio da atualização dos status logísticos na base de dados.
+
+\paragraph*{RF09 -- Preenchimento Manual do Frete}
+O sistema deve possuir campos para armazenar e permitir o preenchimento manual do valor de frete cobrado.
+
+\paragraph*{RF10 -- Área do Cliente e Consulta de Boletos}
+O sistema deve prover um portal B2B onde o usuário comprador possa visualizar exclusivamente o histórico de pedidos da sua respectiva empresa, bem como acessar os boletos atrelados às compras.
+
+\paragraph*{RF11 -- Pedido de Troca ou Devolução}
+O sistema deve dispor de um módulo de RMA no portal do cliente, permitindo a abertura e o acompanhamento de chamados de devolução ou troca para pedidos que já estejam no estágio de expedição.
+
+\paragraph*{RF12 -- Cálculo Automático da Comissão}
+O sistema deve calcular e registrar automaticamente a comissão do representante no momento da aprovação do pedido, baseando-se no percentual fixo cadastrado no perfil do representante e no valor total da venda.
+
+\paragraph*{RF13 -- Permissões de Acesso por Tipo de Usuário}
+O sistema deve implementar um controle de acesso baseado em perfis (Administrador, Representante e Comprador), restringindo o acesso a endpoints específicos da API de acordo com as permissões de cada cargo.
+
+\subsection{Requisitos Não Funcionais}
+
+\paragraph*{RNF01 -- Proteção de Dados e Acesso}
+O sistema precisa assegurar o sigilo das informações armazenadas através do uso de chaves criptográficas e mecanismos de defesa atualizados. O processo de login deve adotar regras estritas de proteção, impedindo o tráfego ou a leitura de palavras-passe em formato original durante as validações.
+
+\paragraph*{RNF02 -- Capacidade e Tempo de Resposta}
+A aplicação deve apresentar alta velocidade no processamento das páginas e operar de forma estável, mantendo a agilidade mesmo sob o acesso de múltiplos usuários conectados ao mesmo tempo.
+
+\paragraph*{RNF03 -- Usabilidade}
+A interface do sistema deve ser planejada de forma limpa e autoexplicativa, permitindo uma navegação descomplicada tanto para operadores experientes quanto para pessoas com pouca familiaridade com ferramentas digitais.
+
+\paragraph*{RNF04 -- Manutenibilidade}
+A construção do software deve seguir regras rígidas de escrita e formatação, assegurando uma estrutura padronizada que facilite a compreensão, a manutenção e futuras revisões por qualquer membro da equipe técnica.
+
+\paragraph*{RNF05 -- Escalabilidade}
+A arquitetura do sistema precisa ser planejada para absorver o aumento contínuo no volume de acessos e operações sem perder estabilidade. Além disso, a estrutura deve permitir a inclusão de novas ferramentas ou expansões sem prejudicar a velocidade geral da plataforma.
+
+\paragraph*{RNF06 -- Privacidade}
+A aplicação deve respeitar rigorosamente as leis e diretrizes vigentes sobre segurança da informação, assegurando que o armazenamento e o manuseio de dados cadastrais sejam feitos com total privacidade e controle de acesso.
+
+\subsection{Regras de Negócio}
+
+\begin{table}[h!]
+  \centering
+  \begin{tabularx}{\textwidth}{p{1.5cm} X}
+    \toprule
+    \textbf{ID} & \textbf{Regra de Negócio} \\
+    \midrule
+    RN01 & Vendas que ultrapassam o limite do cliente são bloqueadas e exigem liberação de um administrador. \\
+    \addlinespace
+    RN02 & O sistema impede a aprovação do pedido se não houver saldo suficiente no estoque. \\
+    \addlinespace
+    RN03 & O vendedor só pode visualizar e vender para os seus próprios clientes. \\
+    \addlinespace
+    RN04 & O valor do produto muda de acordo com a região do cliente ou com a quantidade comprada. \\
+    \addlinespace
+    RN05 & Ao aprovar o pedido, o saldo cai automaticamente, tirando primeiro do galpão mais cheio. \\
+    \addlinespace
+    RN06 & A comissão do vendedor é calculada e registrada automaticamente assim que a venda é aprovada. \\
+    \addlinespace
+    RN07 & Só é possível alterar os produtos de uma venda enquanto ela ainda for um ``orçamento''. \\
+    \addlinespace
+    RN08 & A contagem do estoque é separada por cor, tamanho e pelo galpão onde o produto está guardado. \\
+    \addlinespace
+    RN09 & O boleto de cobrança só é criado pelo sistema após a venda ser totalmente aprovada. \\
+    \addlinespace
+    RN10 & Ao concluir uma devolução, o produto volta automaticamente para o saldo do estoque. \\
+    \addlinespace
+    RN11 & Uma venda só pode ser cancelada se ainda não tiver sido aprovada. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Regras de Negócio}
+\end{table}
+
+% ─── 4. Plano de Liberações ──────────────────────────────────────────────────
+\section{PLANO DE LIBERAÇÕES}
+
+\subsection*{Release 1}
+
+\subsubsection*{Iteração 1: Infraestrutura e Autenticação}
+
+\textbf{Data Inicial:} 05/2026 \quad \textbf{Data Final:} 06/2026
+
+\textbf{Objetivo:} Estabelecer a infraestrutura base e os mecanismos de segurança da plataforma, configurando o ambiente padronizado de desenvolvimento (Docker), estruturando as tabelas do banco de dados e implementando o sistema de controle de acesso seguro via autenticação por tokens (JWT).
+
+\textbf{Atividades:} Configuração do ambiente Docker, modelagem do banco de dados (DDL completo), criação dos Eloquent Models, implementação do middleware de autenticação JWT e endpoints de login/logout.
+
+\subsubsection*{Iteração 2: Cadastros Base e Catálogo}
+
+\textbf{Data Inicial:} 05/2026 \quad \textbf{Data Final:} 05/2026
+
+\textbf{Objetivo:} Desenvolver a estrutura base da plataforma, implementando os módulos de gestão de acessos e perfis, o isolamento seguro de carteiras comerciais e a estruturação completa do catálogo de produtos, regras de precificação e controle de múltiplos depósitos.
+
+\textbf{Atividades:} CRUD de usuários com perfis, CRUD de empresas e representantes com controle de carteira, catálogo de produtos com grades, tabelas de preço e gestão de estoque por depósito.
+
+\subsubsection*{Iteração 3: Módulo de Pedidos e Aprovação Financeira}
+
+\textbf{Data Inicial:} 05/2026 \quad \textbf{Data Final:} 06/2026
+
+\textbf{Objetivo:} Desenvolver o módulo central de vendas da plataforma, abrangendo o ciclo completo de orçamentos e pedidos, a aplicação de bloqueios automáticos por limite de crédito e a baixa inteligente de estoque (método FIFO) em múltiplos depósitos, além do cálculo automático de comissões.
+
+\textbf{Atividades:} Ciclo completo de pedidos (orçamento -- aprovação), bloqueio automático por limite de crédito, fila de aprovação financeira, baixa de estoque FIFO multi-depósito e geração automática de comissões.
+
+\subsubsection*{Iteração 4: Expedição, Boletos e RMA}
+
+\textbf{Data Inicial:} 05/2026 \quad \textbf{Data Final:} 06/2026
+
+\textbf{Objetivo:} Desenvolver a arquitetura de pós-venda da plataforma, implementando o módulo de expedição integrado ao faturamento (boletos) e construindo o sistema de trocas e devoluções (RMA) com automação de estorno de estoque.
+
+\textbf{Atividades:} Módulo de expedição com status logísticos, emissão de boletos vinculados à expedição, módulo RMA com máquina de estados e reposição automática de estoque em devoluções.
+
+\subsubsection*{Iteração 5: Correções, Segurança e Refinamentos}
+
+\textbf{Data Inicial:} 05/2026 \quad \textbf{Data Final:} 06/2026
+
+\textbf{Objetivo:} Assegurar a estabilidade e a segurança da plataforma para o lançamento por meio de testes rigorosos, validando as travas de proteção das rotas (controle de acesso por perfil) e garantindo a integridade absoluta das regras de negócio operacionais.
+
+\textbf{Atividades:} Varredura de bugs e validações de segurança (controle de acesso por perfil, proteção contra XSS, FIFO de estoque), ajustes de permissões por rota, filtragem de carteira por representante e correções de fluxo de autenticação.
+
+\subsubsection*{Iteração 6: Catálogo Frontend e Gestão de Crédito}
+
+\textbf{Data Inicial:} 05/2026 \quad \textbf{Data Final:} 06/2026
+
+\textbf{Objetivo:} Desenvolver os módulos comercial e de risco financeiro, implementando a gestão completa do catálogo com precificação dinâmica (tabelas de preço) e estruturando o fluxo hierárquico de solicitação e aprovação de limites de crédito.
+
+\textbf{Atividades:} Tela completa de produtos e gestão de tabelas de preço, proposta de limite de crédito pelo representante com aprovação pelo administrador.
+
+\end{document}
