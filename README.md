@@ -39,13 +39,54 @@ Plataforma de e-commerce B2B (business-to-business) voltada para venda no atacad
 
 **Pré-requisito:** Docker + Docker Compose instalados.
 
+### Linux / macOS
+
 ```bash
 git clone <url-do-repo>
 cd ecommerce-trab
 make up
 ```
 
-Após o `make up` o ambiente estará disponível em:
+#### Comandos úteis
+
+```bash
+make logs          # acompanhar logs em tempo real
+make shell-backend # abrir bash no container PHP
+make shell-db      # abrir cliente MariaDB
+make db-reset      # recriar o banco do zero (apaga dados!)
+make seed          # popular o banco com dados de teste
+make test          # rodar os testes da API (requer seed executado antes)
+make down          # derrubar os containers
+```
+
+---
+
+### Windows
+
+O `make` não está disponível nativamente no Windows. Use os comandos do Docker diretamente:
+
+```bash
+git clone <url-do-repo>
+cd ecommerce-trab
+docker compose up -d --build
+```
+
+#### Comandos úteis (equivalentes ao Makefile)
+
+```bash
+docker compose logs -f                                                                                       # logs em tempo real
+docker compose exec backend bash                                                                             # bash no container PHP
+docker compose exec db mariadb -u root -proot ecommerce_b2b                                                 # cliente MariaDB
+docker compose down -v && docker compose up -d --build                                                      # recriar banco do zero
+docker exec ecommerce-trab-backend-1 php /var/www/html/cli/seed.php                                         # popular banco (dados base)
+docker exec ecommerce-trab-backend-1 php /var/www/html/cli/seed-produtos.php                                # popular banco (produtos)
+docker exec ecommerce-trab-backend-1 php /var/www/html/cli/test-api.php --base-url=http://localhost/api     # rodar testes
+docker compose down                                                                                          # derrubar containers
+```
+
+---
+
+Após subir o ambiente, ele estará disponível em:
 
 | Serviço | URL |
 |---|---|
@@ -56,35 +97,48 @@ Após o `make up` o ambiente estará disponível em:
 O `composer install` roda automaticamente dentro do container na primeira subida.
 Credenciais do banco são apenas para desenvolvimento local.
 
-### Comandos úteis
-
-```bash
-make logs          # acompanhar logs em tempo real
-make shell-backend # abrir bash no container PHP
-make shell-db      # abrir cliente MariaDB
-make db-reset      # recriar o banco do zero (apaga dados!)
-make test          # rodar os testes da API (requer containers no ar)
-make down          # derrubar os containers
-```
-
 ---
 
 ## Como rodar sem Docker (alternativa)
 
 **Pré-requisitos:** PHP 8.1+, Composer, MySQL/MariaDB
 
+#### 1. Instalar dependências e configurar ambiente
+
 ```bash
 cd backend
 composer install
 cp .env.example .env
 # editar .env com as credenciais do banco local
-
-mysql -u root -p < ../database/schema.sql
-
-# Em terminais separados:
-php -S localhost:8000 -t public/    # API
-php -S localhost:3000 ../frontend/  # Frontend
 ```
+
+#### 2. Criar o banco e rodar o schema
+
+```bash
+mysql -u root -p < ../database/schema.sql
+```
+
+#### 3. Popular o banco com dados de teste (seed)
+
+```bash
+php cli/seed.php
+php cli/seed-produtos.php
+```
+
+#### 4. Subir os servidores (em terminais separados)
+
+```bash
+php -S localhost:8000 -t public/     # API (terminal 1)
+php -S localhost:3000 ../frontend/   # Frontend (terminal 2)
+```
+
+#### 5. Rodar os testes
+
+```bash
+php cli/test-api.php --base-url=http://localhost:8000/api
+```
+
+> O seed precisa ter sido executado antes dos testes.
 
 ---
 
